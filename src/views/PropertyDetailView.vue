@@ -277,7 +277,6 @@
                                     :property="listing"
                                     :image-loading="index < 3 ? 'eager' : 'lazy'"
                                     :show-interest-button="true"
-                                    :show-menu="false"
                                 />
                             </div>
                             <p v-else class="property-detail__filters-empty">

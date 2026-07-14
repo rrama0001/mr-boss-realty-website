@@ -129,17 +129,7 @@
                                                 class="property-detail__filter-checkbox"
                                                 :value="city"
                                             />
-                                            <span class="property-detail__filter-label">
-                                                <router-link
-                                                    v-if="!isCityBrowsePage || city !== routeCityName"
-                                                    :to="cityBrowseRoute(city)"
-                                                    class="property-detail__filter-city-link"
-                                                    @click.stop
-                                                >
-                                                    {{ city }}
-                                                </router-link>
-                                                <span v-else>{{ city }}</span>
-                                            </span>
+                                            <span class="property-detail__filter-label">{{ city }}</span>
                                             <span class="property-detail__filter-count">{{ cityCounts[city] || 0 }}</span>
                                         </label>
                                     </li>
@@ -257,7 +247,6 @@
 import PropertyCard from '@/components/home/PropertyCard.vue';
 import { sortUnitTypes } from '@/constants/unitTypes';
 import { cityToSlug, resolveCityFromSlug, getListingCity, buildProjectPublicApiPath } from '@/utils/propertyCity';
-import { getPropertiesByCityRoute } from '@/utils/propertyRoutes';
 import { updatePageMeta } from '@/utils/seo';
 import { getWholeBuildingListings } from '@/utils/mapPropertyListingsToCards';
 import { buildCityListingCounts, countPropertyListingsForProject } from '@/utils/propertyCityCounts';
@@ -610,9 +599,6 @@ export default {
         this.syncAllBathroomsIndeterminate();
     },
     methods: {
-        cityBrowseRoute(city) {
-            return getPropertiesByCityRoute(city);
-        },
         applyRouteCityFilter() {
             if (this.isCityBrowsePage) {
                 const city = resolveCityFromSlug(this.routeCitySlug, this.availableCities);
