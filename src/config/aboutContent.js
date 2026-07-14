@@ -24,7 +24,7 @@ export const ABOUT_PAGE = {
             title: 'Our Evolution',
             content: `
                 <p>The vision for a modern, AI-powered brokerage began one year ago. Inspired by the forward-thinking insights of Mr. A, who first introduced the transformative potential of artificial intelligence in our field, we set out to redefine the standard of service.</p>
-                <p>Gerald Dawkins, our Marketing Strategist, spearheaded this shift. By moving us away from traditional sales models to a strategy centered on precision-driven AI solutions and compelling visual storytelling, Gerald has redefined how we present the property market. This technological evolution was solidified by the addition of Rei Yurama, whose expertise in software development and information systems powers our custom digital platforms, making the property market more accessible and efficient than ever before.</p>
+                <p>Gerard Dawkins, our Marketing Strategist, spearheaded this shift. By moving us away from traditional sales models to a strategy centered on precision-driven AI solutions and compelling visual storytelling, Gerard has redefined how we present the property market. This technological evolution was solidified by the addition of Rei Yurama, whose expertise in software development and information systems powers our custom digital platforms, making the property market more accessible and efficient than ever before.</p>
             `,
         },
         {

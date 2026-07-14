@@ -13,6 +13,9 @@
 
         <div class="container-xl home-hero__content">
             <div class="home-hero__copy">
+                <div class="home-hero__copy-orb" aria-hidden="true">
+                    <AiOrb :active="true" :thinking="false" />
+                </div>
                 <p class="home-hero__subtitle">Mr. Boss Realty AI</p>
                 <p class="home-hero__tagline">
                     The smarter way to find condos, houses, and rentals—anywhere, anytime.
@@ -49,6 +52,7 @@
 </template>
 
 <script>
+import AiOrb from '@/components/ai/AiOrb.vue';
 import heroBgUrl from '@/assets/images/hero-bg.jpg';
 import {
     dispatchSiteChatMessage,
@@ -58,6 +62,7 @@ import {
 
 export default {
     name: 'HomeHero',
+    components: { AiOrb },
     data() {
         return {
             heroBgUrl,
