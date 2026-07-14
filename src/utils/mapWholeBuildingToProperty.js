@@ -3,6 +3,7 @@ import { getListingCity } from '@/utils/propertyCity';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
 import { getBuildingDetailRoute, getPropertyDetailRoute } from '@/utils/propertyRoutes';
 import { buildBuildingInterestMessage } from '@/utils/siteChat';
+import { resolveMediaUrl } from '@/utils/mediaUrls';
 
 const DEFAULT_BUILDING_IMAGE =
     'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80';
@@ -128,7 +129,7 @@ export function mapWholeBuildingToPropertyCard(building, project = {}, options =
         beds: null,
         baths: null,
         status: isRent ? 'For Rent' : 'For Sale',
-        image: building.image || project.image || DEFAULT_BUILDING_IMAGE,
+        image: resolveMediaUrl(building.image || project.image) || DEFAULT_BUILDING_IMAGE,
         metaItems,
         detailTo: options.linkToProject
             ? getPropertyDetailRoute(listingProjectFromCard(building, project))
@@ -149,7 +150,7 @@ export function mapPublicWholeBuildingToPropertyCard(building, options = {}) {
         city: building.project_city,
         location: building.project_location,
         status: building.project_status,
-        image: building.image,
+        image: resolveMediaUrl(building.image) || '',
     }, options);
 }
 

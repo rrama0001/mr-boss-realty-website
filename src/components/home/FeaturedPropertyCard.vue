@@ -59,6 +59,7 @@
 import CityLink from '@/components/property/CityLink.vue';
 import { getListingCity } from '@/utils/propertyCity';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
+import { resolveMediaUrl } from '@/utils/mediaUrls';
 import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 
 export default {
@@ -99,7 +100,7 @@ export default {
                 return this.fallbackImage;
             }
 
-            return this.property.image || this.fallbackImage;
+            return resolveMediaUrl(this.property.image) || this.fallbackImage;
         },
         displayTitle() {
             return getWebsitePropertyDisplayName(this.property);

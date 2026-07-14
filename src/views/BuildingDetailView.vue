@@ -270,14 +270,14 @@ export default {
         },
         coverImage() {
             if (this.activeGalleryUrl && !this.imageFailed) {
-                return this.activeGalleryUrl;
+                return resolveMediaUrl(this.activeGalleryUrl);
             }
 
             if (this.imageFailed || !this.building?.image) {
                 return fallbackCoverImage || DEFAULT_COVER;
             }
 
-            return this.building.image;
+            return resolveMediaUrl(this.building.image);
         },
         galleryItems() {
             if (!this.building) return [];

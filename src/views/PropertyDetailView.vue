@@ -367,7 +367,7 @@ export default {
             return String(this.property?.description || '').trim();
         },
         coverImage() {
-            return this.property?.image || fallbackCoverImage || DEFAULT_COVER;
+            return resolveMediaUrl(this.property?.image) || fallbackCoverImage || DEFAULT_COVER;
         },
         logoSrc() {
             if (this.logoFailed || !this.property?.logo) {

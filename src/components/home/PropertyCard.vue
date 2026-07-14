@@ -61,6 +61,7 @@ import InterestedButton from '@/components/InterestedButton.vue';
 import LocationWithCity from '@/components/property/LocationWithCity.vue';
 import PropertyCardMenu from '@/components/property/PropertyCardMenu.vue';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
+import { resolveMediaUrl } from '@/utils/mediaUrls';
 import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 
 export default {
@@ -113,7 +114,7 @@ export default {
                 return this.fallbackImage;
             }
 
-            return this.property.image || this.fallbackImage;
+            return resolveMediaUrl(this.property.image) || this.fallbackImage;
         },
         displayTitle() {
             if (this.property.propertyName) {

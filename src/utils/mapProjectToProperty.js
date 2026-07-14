@@ -3,6 +3,7 @@ import { getListingCity } from '@/utils/propertyCity';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
 import { getWebsiteDeveloperDisplay } from '@/utils/developerDisplay';
 import { buildPropertyInterestMessage } from '@/utils/siteChat';
+import { resolveMediaUrl } from '@/utils/mediaUrls';
 
 const DEFAULT_PROPERTY_IMAGE =
     'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80';
@@ -83,7 +84,7 @@ export function mapProjectToProperty(project) {
         status: formatProjectStatus(project.status),
         statusKey: project.status,
         buildingTypes: project.buildingTypes || [],
-        image: project.image || DEFAULT_PROPERTY_IMAGE,
+        image: resolveMediaUrl(project.image) || DEFAULT_PROPERTY_IMAGE,
         metaItems,
         detailTo: getPropertyDetailRoute(project),
         isProjectCard: true,

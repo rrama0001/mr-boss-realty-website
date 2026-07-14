@@ -7,7 +7,7 @@ export function resolveMediaUrl(url) {
     const value = String(url || '').trim();
     if (!value) return '';
 
-    const normalized = value.replace(/\/api\/uploads\//i, '/uploads/');
+    const normalized = value.replace(/\/api\/uploads\//gi, '/uploads/');
 
     if (import.meta.env.DEV) {
         const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
