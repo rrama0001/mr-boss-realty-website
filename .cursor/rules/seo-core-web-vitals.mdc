@@ -1,0 +1,54 @@
+---
+description: SEO and Core Web Vitals standards for the public marketing website
+globs: website/**/*
+alwaysApply: false
+---
+
+# Website SEO & Core Web Vitals (mr-boss-realty/website)
+
+Treat every change to the public site as SEO- and performance-sensitive. Prefer improvements that help search engines and real users without breaking existing UI or API flows.
+
+## SEO essentials
+
+- **Semantic HTML**: Use one `<h1>` per page, logical heading order, `<main>`, `<nav>`, `<section>`, `<article>`, `<header>`, `<footer>`.
+- **Meta per route**: Unique `<title>`, `meta name="description"`, and canonical URL for each public page (use `vue-meta` / head management when adding routes).
+- **Open Graph / Twitter**: `og:title`, `og:description`, `og:image`, `og:url` on shareable pages (home, property detail, blog if added).
+- **Images**: Meaningful `alt` on content images; decorative images use `alt=""` and `aria-hidden="true"`.
+- **Links**: Descriptive anchor text; internal links use `router-link` with crawlable `href` (history mode + server fallback for production).
+- **Structured data**: Add JSON-LD where it fits (e.g. `RealEstateAgent`, `Organization`, `Product`/`Apartment` for listings).
+- **i18n-ready copy**: Clear, keyword-natural titles and headings; avoid empty or duplicate meta across routes.
+- **robots/sitemap**: Keep `robots.txt` and `sitemap.xml` in sync when new public routes ship.
+
+## Core Web Vitals (LCP, INP, CLS)
+
+### LCP (Largest Contentful Paint)
+- Hero image (`hero-bg.jpg`): prefer WebP/AVIF with fallback; set explicit dimensions or aspect-ratio on hero container.
+- Preload LCP image on home: `<link rel="preload" as="image" href="...">` when the hero is above the fold.
+- Fonts: keep `preconnect` to Google Fonts; use `font-display: swap`; subset weights actually used.
+- Avoid render-blocking JS/CSS beyond critical path; lazy-load below-the-fold sections and images.
+
+### INP (Interaction to Next Paint)
+- Debounce heavy work on input; keep chat/AI UI responsive (`thinking` state, no long sync work on main thread).
+- Prefer CSS transforms/opacity for animations (orb, dock, chat reveal); avoid layout-thrashing style writes in animation loops.
+- Code-split routes: `() => import('@views/...')` for non-home pages.
+
+### CLS (Cumulative Layout Shift)
+- Reserve space for images, chat panel, header orb slot, and dynamic content (`min-height` on header, fixed hero content padding).
+- No late-injected content above the fold without reserved height.
+- Load web fonts with fallbacks matching metrics where possible.
+
+## Implementation habits
+
+- **Vite**: Use `@assets` imports for images so URLs are hashed and cacheable; compress large assets before commit.
+- **Build**: Run `npm run build` after meaningful UI changes; smoke-test home, navigation, and chat.
+- **Accessibility overlaps SEO**: labels on inputs, focus management in modals/chat, sufficient contrast on hero overlay text.
+- **Third-party**: Minimize trackers/widgets; defer non-critical scripts.
+
+## Before finishing a website change
+
+1. Does the page have a unique title + description (or a clear plan to add them)?
+2. Are images optimized with `alt` and stable layout?
+3. Did we avoid new layout shift or main-thread jank?
+4. Will this work with `mode: 'history'` in production (server rewrites to `index.html`)?
+
+Do not sacrifice the established chat/dock UX or API contracts for micro-optimizations; balance SEO/CWV with the current product design.

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Served dynamically in development via the API proxy.
+# In production, configure your host to proxy /sitemap.xml and /robots.txt to the API,
+# or set WEBSITE_URL on the API so generated sitemap URLs use your live domain.
+Sitemap: https://www.mrbossrealty.com/sitemap.xml

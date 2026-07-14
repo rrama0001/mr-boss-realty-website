@@ -1,0 +1,9 @@
+Deferred (after Vue 3):
+
+Unit media upload (highest priority)
+Property logo/hero upload via existing assets table
+Clearer labeling for “Images and Videos Link” as external folder/video/AI reference
+Building-level media for whole-property listings
+Until then: keep using Images and Videos Link (Google Drive, direct URLs, etc.). The assets schema is already there; we’ll wire admin upload UI after the migration.
+
+When you’re ready for Vue 3 or media uploads, say which you want to tackle first.

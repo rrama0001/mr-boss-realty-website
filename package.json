@@ -1,0 +1,25 @@
+{
+    "name": "mr-boss-realty-website",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@tabler/core": "^1.4.0",
+        "@tabler/icons-webfont": "^3.34.0",
+        "axios": "^1.5.0",
+        "dompurify": "^3.4.11",
+        "marked": "^18.0.5",
+        "mitt": "^3.0.1",
+        "vue": "^3.5.13",
+        "vue-router": "^4.5.0"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^4.6.2",
+        "sass": "^1.93.3",
+        "vite": "^4.5.0"
+    }
+}

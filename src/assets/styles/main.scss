@@ -1,0 +1,23 @@
+@use 'variables';
+@use 'scrollbars';
+@use 'ai-orb';
+@use 'ai-guide';
+@use 'layout';
+@use 'media-viewer';
+@use 'site-search';
+@use 'home';
+@use 'property-hero';
+@use 'properties';
+@use 'property-detail';
+@use 'interested-button';
+@use 'unit-detail';
+@use 'contact';
+@use 'about';
+@use 'legal-page';
+@use 'compare';
+@use 'confirm-dialog';
+
+.modal-backdrop-custom {
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1055;
+}

@@ -1,0 +1,14 @@
+:root {
+  --app-primary: #066fd1;
+  --app-accent: #ff5a3c;
+  --app-dark: #1a1a2e;
+  --site-header-height: 5rem;
+  --site-max-width: 1170px;
+
+  --tblr-body-bg: #ffffff;
+  --tblr-body-bg-rgb: 255, 255, 255;
+  --tblr-primary: var(--app-primary);
+  --tblr-font-sans-serif: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --tblr-body-font-family: var(--tblr-font-sans-serif);
+  --tblr-body-font-size: 1rem;
+}

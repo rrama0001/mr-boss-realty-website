@@ -1,0 +1,44 @@
+.interested-btn {
+	flex-shrink: 0;
+	white-space: nowrap;
+	background: var(--app-accent);
+	border-color: var(--app-accent);
+	color: #fff;
+
+	&:hover,
+	&:focus {
+		background: #e84e32;
+		border-color: #e84e32;
+		color: #fff;
+	}
+
+	&:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	&--align-center {
+		align-self: center;
+	}
+
+	&--compact {
+		padding: 0.35rem 0.75rem;
+		font-size: 0.8125rem;
+		line-height: 1.25;
+	}
+}
+
+.section-title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.65rem 1rem;
+	margin-bottom: 0.35rem;
+
+	h2 {
+		margin: 0;
+		font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+		font-weight: 700;
+		color: #0f2744;
+	}
+}

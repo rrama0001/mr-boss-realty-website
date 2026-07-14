@@ -1,0 +1,32 @@
+@use 'sass:list';
+
+// Icon tone palette — matches admin stat-icon colors.
+
+$icon-tones: (
+	'blue': (#1877f2, rgba(24, 119, 242, 0.12)),
+	'cyan': (#00a2b5, rgba(0, 162, 181, 0.12)),
+	'purple': (#774dcb, rgba(119, 77, 203, 0.12)),
+	'green': (#31a24c, rgba(49, 162, 76, 0.12)),
+	'indigo': (#5856d6, rgba(88, 86, 214, 0.12)),
+	'orange': (#f77737, rgba(247, 119, 55, 0.12)),
+	'red': (#f03e3e, rgba(240, 62, 62, 0.12)),
+	'amber': (#f59f00, rgba(245, 159, 0, 0.12)),
+	'slate': (#64748b, rgba(100, 116, 139, 0.12)),
+);
+
+@mixin icon-tone-modifiers($block) {
+	@each $name, $pair in $icon-tones {
+		$color: list.nth($pair, 1);
+		$background: list.nth($pair, 2);
+
+		#{$block}--#{$name} {
+			color: $color;
+			background: $background;
+		}
+	}
+
+	#{$block}--default {
+		color: var(--app-primary);
+		background: rgba(6, 111, 209, 0.1);
+	}
+}
