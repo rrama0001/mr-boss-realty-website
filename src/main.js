@@ -24,5 +24,5 @@ faviconLink.href = faviconUrl;
 document.head.appendChild(faviconLink);
 
 updatePageMeta(getDefaultPageMeta());
-
+console.log('VITE_API_URL =', import.meta.env.VITE_API_URL);
 app.mount('#app');
