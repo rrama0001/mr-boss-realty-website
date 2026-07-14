@@ -169,7 +169,7 @@ import { formatCurrency } from '@/utils/formatCurrency';
 import { getBuildingDetailPath, getBuildingDetailRoute, getPropertiesByCityRoute, getPropertyDetailRoute } from '@/utils/propertyRoutes';
 import { buildListingPublicApiPathFromRoute } from '@/utils/propertyCity';
 import { updatePageMeta, getSiteUrl } from '@/utils/seo';
-import { extractMediaPreviews } from '@/utils/mediaUrls';
+import { extractMediaPreviews, resolveMediaUrl } from '@/utils/mediaUrls';
 import { getWebsitePropertyDisplayName, isPrivateOnWebsite } from '@/utils/propertyDisplayName';
 import { getListingCity } from '@/utils/propertyCity';
 import { getWebsiteDeveloperDisplay } from '@/utils/developerDisplay';
@@ -260,7 +260,7 @@ export default {
                 return this.defaultPropertyLogo;
             }
 
-            return this.building.logo;
+            return resolveMediaUrl(this.building.logo);
         },
         interestMessage() {
             return buildBuildingInterestMessage(
