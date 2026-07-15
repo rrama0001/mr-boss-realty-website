@@ -74,6 +74,14 @@
             </div>
         </Teleport>
 
+        <PropertyShareModal
+            :open="shareSheetOpen"
+            :property="property"
+            :url="shareUrl"
+            @close="closeShareSheet"
+            @copied="onShareCopied"
+        />
+
         <p v-if="feedback" class="property-card-menu__feedback" role="status">{{ feedback }}</p>
     </div>
 </template>
@@ -82,7 +90,7 @@
 import {
     copyTextToClipboard,
     getPropertyReferenceId,
-    sharePropertyLink,
+    resolvePropertyDetailUrl,
 } from '@/utils/propertyCardActions';
 import { canCompareListing, canCompareSimilar, resolveCompareSimilarProperty } from '@/utils/fetchListingForCompare';
 import {
@@ -95,9 +103,13 @@ import {
     openSimilarPropertyCompare,
     setCompareAnchor,
 } from '@/utils/propertyCompare';
+import PropertyShareModal from '@/components/property/PropertyShareModal.vue';
 
 export default {
     name: 'PropertyCardMenu',
+    components: {
+        PropertyShareModal,
+    },
     props: {
         property: {
             type: Object,
@@ -112,6 +124,8 @@ export default {
             feedback: '',
             feedbackTimer: null,
             anchorVersion: 0,
+            shareSheetOpen: false,
+            shareUrl: '',
         };
     },
     computed: {
@@ -160,6 +174,7 @@ export default {
     beforeUnmount() {
         compareBus.off(COMPARE_EVENTS.anchorChanged, this.onAnchorChanged);
         this.closeMenu();
+        this.closeShareSheet();
         this.clearFeedbackTimer();
     },
     methods: {
@@ -290,7 +305,7 @@ export default {
                 this.feedbackTimer = null;
             }
         },
-        async copyReferenceId() {
+        copyReferenceId() {
             this.closeMenu();
 
             if (!this.canCopyReference) {
@@ -299,25 +314,28 @@ export default {
             }
 
             try {
-                await copyTextToClipboard(this.referenceId);
+                copyTextToClipboard(this.referenceId);
                 this.showFeedback('Reference ID copied.');
             } catch {
                 this.showFeedback('Could not copy reference ID.');
             }
         },
-        async shareListing() {
+        shareListing() {
+            const url = resolvePropertyDetailUrl(
+                this.$router,
+                this.property.detailTo,
+                this.property,
+            );
             this.closeMenu();
-
-            try {
-                const result = await sharePropertyLink(this.$router, this.property);
-                this.showFeedback(result.mode === 'share' ? 'Share opened.' : 'Link copied.');
-            } catch (error) {
-                if (error?.name === 'AbortError') {
-                    return;
-                }
-
-                this.showFeedback('Could not share this listing.');
-            }
+            this.shareUrl = url;
+            this.shareSheetOpen = true;
+        },
+        closeShareSheet() {
+            this.shareSheetOpen = false;
+            this.shareUrl = '';
+        },
+        onShareCopied() {
+            this.showFeedback('Link copied.');
         },
         compareListing() {
             this.closeMenu();

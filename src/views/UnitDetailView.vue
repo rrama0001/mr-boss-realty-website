@@ -65,7 +65,7 @@
                     <div class="property-detail__section-head">
                         <div>
                             <div class="section-title-row">
-                                <h2>Unit Details</h2>
+                                <h2>{{ unit.unit_type || unitTitle }}</h2>
                                 <p class="unit-detail__price">{{ formattedPrice }}</p>
                                 <InterestedButton :unit-slug="unit.slug" />
                             </div>
@@ -220,7 +220,12 @@ import {
     isUnitRentListing,
     pickUnitDisplayPrice,
 } from '@/utils/unitListing';
-import { getPropertyDetailRoute, getUnitDetailPath, getUnitDetailRoute, getPropertiesByCityRoute } from '@/utils/propertyRoutes';
+import {
+    getPropertiesByCityRoute,
+    getPropertyDetailRoute,
+    getUnitDetailPath,
+    getUnitDetailRoute,
+} from '@/utils/propertyRoutes';
 import { buildProjectPublicApiPath } from '@/utils/propertyCity';
 import { mapPublicUnitToPropertyCard, mapUnitToPropertyCard } from '@/utils/mapUnitToProperty';
 import { pickProjectSiblingUnits, pickSimilarUnits, buildSimilarUnitsSubtitle } from '@/utils/suggestUnits';
@@ -228,7 +233,6 @@ import { updatePageMeta, getSiteUrl } from '@/utils/seo';
 import { extractMediaPreviews, resolveMediaUrl } from '@/utils/mediaUrls';
 import { getWebsitePropertyDisplayName, isPrivateOnWebsite } from '@/utils/propertyDisplayName';
 import { getListingCity } from '@/utils/propertyCity';
-import { getWebsiteDeveloperDisplay } from '@/utils/developerDisplay';
 import { scrollToPageTopAfterRender } from '@/utils/scroll';
 import PropertyListingBreadcrumb from '@/components/property/PropertyListingBreadcrumb.vue';
 import LocationWithCity from '@/components/property/LocationWithCity.vue';
@@ -455,15 +459,37 @@ export default {
 
             const items = [
                 {
+                    key: 'size',
+                    label: 'Unit Size',
+                    value: this.unit.unit_size,
+                },
+                {
+                    key: 'listing-type',
+                    label: 'Listing Type',
+                    value: isUnitRentListing(this.unit) ? 'For Rent' : 'For Sale',
+                },
+                {
+                    key: 'reservation-fee',
+                    label: 'Reservation Fee',
+                    value: this.unit.reservation_fee
+                        ? formatCurrency(this.unit.reservation_fee, { fallback: '—' })
+                        : null,
+                },
+                {
+                    key: 'reservation-deductible',
+                    label: 'Reservation Deductible',
+                    value: formatYesNo(this.unit.is_reservation_deductible),
+                },
+                {
+                    key: 'payment-terms',
+                    label: 'Payment Terms',
+                    value: this.unit.payment_terms,
+                },
+                {
                     key: 'property',
                     label: 'Property',
                     value: this.displayProjectName,
                     to: this.propertyRoute,
-                },
-                {
-                    key: 'developer',
-                    label: 'Developer',
-                    value: getWebsiteDeveloperDisplay(this.unit.project_developer),
                 },
                 {
                     key: 'city',
@@ -479,86 +505,9 @@ export default {
                     value: this.unit.building_name,
                 },
                 {
-                    key: 'building-type',
-                    label: 'Building Type',
-                    value: this.unit.building_type,
-                },
-                {
-                    key: 'floor',
-                    label: 'Floor',
-                    value: this.unit.floor != null ? String(this.unit.floor) : null,
-                },
-                {
-                    key: 'unit-type',
-                    label: 'Unit Type',
-                    value: this.unit.unit_type,
-                },
-                {
-                    key: 'listing-type',
-                    label: 'Listing Type',
-                    value: isUnitRentListing(this.unit) ? 'For Rent' : 'For Sale',
-                },
-                {
-                    key: 'size',
-                    label: 'Size',
-                    value: this.unit.unit_size,
-                },
-                {
-                    key: 'bedrooms',
-                    label: 'Bedrooms',
-                    value: this.unit.bedrooms != null ? String(this.unit.bedrooms) : null,
-                },
-                {
-                    key: 'bathrooms',
-                    label: 'Bathrooms',
-                    value: this.unit.bathrooms != null ? String(this.unit.bathrooms) : null,
-                },
-                {
-                    key: 'payment-terms',
-                    label: 'Payment Terms',
-                    value: this.unit.payment_terms,
-                },
-                {
-                    key: 'payment-terms-link',
-                    label: 'Payment Terms Link',
-                    value: this.unit.payment_terms_link,
-                    href: this.unit.payment_terms_link,
-                },
-                {
-                    key: 'reservation-fee',
-                    label: 'Reservation Fee',
-                    value: this.unit.reservation_fee
-                        ? formatCurrency(this.unit.reservation_fee, { fallback: '—' })
-                        : null,
-                },
-                {
-                    key: 'reservation-deductible',
-                    label: 'Reservation Deductible',
-                    value: formatYesNo(this.unit.is_reservation_deductible),
-                },
-                {
-                    key: 'monthly-dues',
-                    label: 'Monthly Dues',
-                    value: this.unit.monthly_dues
-                        ? formatCurrency(this.unit.monthly_dues, { fallback: '—' })
-                        : null,
-                },
-                {
-                    key: 'monthly-dues-per-sqm',
-                    label: 'Monthly Dues / sqm',
-                    value: this.unit.monthly_dues_per_sqm
-                        ? formatCurrency(this.unit.monthly_dues_per_sqm, { fallback: '—' })
-                        : null,
-                },
-                {
                     key: 'pet-allowed',
                     label: 'Pets Allowed',
                     value: formatYesNo(this.unit.is_pet_allowed),
-                },
-                {
-                    key: 'pet-size',
-                    label: 'Allowed Pet Size',
-                    value: this.unit.allowed_pet_size,
                 },
                 {
                     key: 'smoking',

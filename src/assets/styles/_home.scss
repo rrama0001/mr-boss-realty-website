@@ -515,6 +515,231 @@
 	pointer-events: none;
 }
 
+.property-share-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 1400;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1.25rem;
+	background: rgba(15, 23, 42, 0.52);
+}
+
+.property-share-modal__dialog {
+	width: min(100%, 28rem);
+	padding: 1.35rem 1.35rem 1.15rem;
+	border-radius: 1rem;
+	background: #fff;
+	box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+}
+
+.property-share-modal__header {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2rem;
+	margin-bottom: 1.1rem;
+
+	h2 {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 700;
+		color: #0f172a;
+		text-align: center;
+	}
+}
+
+.property-share-modal__close {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: #64748b;
+	transform: translateY(-50%);
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(15, 23, 42, 0.06);
+		color: #0f172a;
+	}
+}
+
+.property-share-modal__preview {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	margin-bottom: 1.35rem;
+	padding: 0.75rem;
+	border-radius: 0.75rem;
+	background: #f1f5f9;
+}
+
+.property-share-modal__thumb {
+	display: block;
+	width: 7.5rem;
+	height: 4.25rem;
+	flex-shrink: 0;
+	object-fit: cover;
+	border-radius: 0.5rem;
+	background: #cbd5e1;
+}
+
+.property-share-modal__preview-body {
+	min-width: 0;
+}
+
+.property-share-modal__preview-title {
+	display: -webkit-box;
+	margin: 0 0 0.4rem;
+	overflow: hidden;
+	color: #0f172a;
+	font-size: 0.9375rem;
+	font-weight: 700;
+	line-height: 1.35;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+.property-share-modal__brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: #475569;
+	font-size: 0.8125rem;
+	font-weight: 600;
+
+	i {
+		color: #2563eb;
+		font-size: 1rem;
+	}
+}
+
+.property-share-modal__brand-logo {
+	width: 1.125rem;
+	height: 1.125rem;
+	object-fit: contain;
+	border-radius: 999px;
+	background: #fff;
+}
+
+.property-share-modal__targets {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 1rem 0.5rem;
+}
+
+.property-share-modal__target {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #0f172a;
+	cursor: pointer;
+}
+
+.property-share-modal__target-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 999px;
+	font-size: 1.5rem;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+	.property-share-modal__target:hover & {
+		transform: translateY(-1px);
+		box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+	}
+
+	&--whatsapp {
+		background: #25d366;
+		color: #fff;
+	}
+
+	&--copy {
+		background: #fff;
+		color: #0f172a;
+		border: 1px solid rgba(15, 23, 42, 0.12);
+	}
+
+	&--facebook {
+		background: #1877f2;
+		color: #fff;
+	}
+
+	&--x {
+		background: #000;
+		color: #fff;
+	}
+
+	&--linkedin {
+		background: #0a66c2;
+		color: #fff;
+	}
+
+	&--telegram {
+		background: #2aabee;
+		color: #fff;
+	}
+
+	&--email {
+		background: #fff;
+		color: #0f172a;
+		border: 1px solid rgba(15, 23, 42, 0.12);
+	}
+
+	&--reddit {
+		background: #ff4500;
+		color: #fff;
+	}
+}
+
+.property-share-modal__target-label {
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.2;
+	text-align: center;
+}
+
+.property-share-modal__status {
+	margin: 0.9rem 0 0;
+	color: #066fd1;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	text-align: center;
+}
+
+@media (max-width: 480px) {
+	.property-share-modal__dialog {
+		padding: 1.15rem 1rem 1rem;
+	}
+
+	.property-share-modal__thumb {
+		width: 5.75rem;
+		height: 3.5rem;
+	}
+
+	.property-share-modal__target-icon {
+		width: 3.15rem;
+		height: 3.15rem;
+		font-size: 1.35rem;
+	}
+}
+
 .property-card__property-name {
 	margin: 0 0 0.2rem;
 	font-size: 0.875rem;

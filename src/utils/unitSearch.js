@@ -1,18 +1,24 @@
 import { formatProjectStatus } from '@/utils/mapProjectToProperty';
+import { resolveUnitListingRef } from '@/utils/unitSlug';
 
 /**
  * Collect searchable text from a unit on a property detail page.
  */
 export function getUnitSearchableText(unit = {}, project = {}) {
+    const listingRef = resolveUnitListingRef(unit);
+
     const parts = [
         unit.unit_type,
         unit.room_number,
         unit.slug,
+        listingRef,
+        unit.listingRef,
         unit.unit_size,
         unit.payment_terms,
         unit.building_name,
         unit.building_type,
         unit.building_status,
+        unit.building_slug,
         formatProjectStatus(unit.building_status),
         project.project_name,
         project.city,

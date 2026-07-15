@@ -333,15 +333,7 @@ export default {
                 && this.matchesUnitTypeFilter(unit)
                 && this.matchesBedroomFilter(unit)
                 && this.matchesBathroomFilter(unit)
-                && (unit.listing_kind === 'whole_building'
-                    ? [
-                        unit.building_name,
-                        unit.building_type,
-                        unit.project_name,
-                        unit.project_city,
-                        unit.project_location,
-                    ].filter(Boolean).join(' ').toLowerCase().includes(query.toLowerCase())
-                    : unitMatchesSearch(unit, query))
+                && unitMatchesSearch(unit, query)
             ));
         },
         filteredUnitCards() {

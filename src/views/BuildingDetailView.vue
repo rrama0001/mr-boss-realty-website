@@ -424,6 +424,18 @@ export default {
                         : (this.building.listing_type === 'sale' ? 'Sale' : null),
                 },
                 {
+                    key: 'reservation-fee',
+                    label: 'Reservation Fee',
+                    value: this.building.reservation_fee
+                        ? formatCurrency(this.building.reservation_fee, { fallback: '—' })
+                        : null,
+                },
+                {
+                    key: 'reservation-deductible',
+                    label: 'Reservation Deductible',
+                    value: formatYesNo(this.building.is_reservation_deductible),
+                },
+                {
                     key: 'bedrooms',
                     label: 'Number of Bedrooms',
                     value: this.building.bedrooms != null ? String(this.building.bedrooms) : null,
@@ -485,18 +497,6 @@ export default {
                     label: 'Payment Terms Link',
                     value: this.building.payment_terms_link,
                     href: this.building.payment_terms_link,
-                },
-                {
-                    key: 'reservation-fee',
-                    label: 'Reservation Fee',
-                    value: this.building.reservation_fee
-                        ? formatCurrency(this.building.reservation_fee, { fallback: '—' })
-                        : null,
-                },
-                {
-                    key: 'reservation-deductible',
-                    label: 'Reservation Deductible',
-                    value: formatYesNo(this.building.is_reservation_deductible),
                 },
                 {
                     key: 'monthly-dues',
