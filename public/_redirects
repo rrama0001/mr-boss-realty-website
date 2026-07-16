@@ -1,1 +1,3 @@
+# SPA fallback for routes not handled by Pages Functions.
+# /properties/* is handled by functions/properties/[[path]].js (Open Graph).
 /*    /index.html   200

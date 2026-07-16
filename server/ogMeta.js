@@ -14,7 +14,9 @@ function getSiteUrl() {
 }
 
 function getApiBaseUrl() {
-    const raw = String(process.env.API_URL || process.env.VITE_API_URL || DEFAULT_API_URL).trim();
+    const raw = String(
+        process.env.API_URL || process.env.VITE_API_URL || DEFAULT_API_URL,
+    ).trim();
     if (!raw) return DEFAULT_API_URL;
     if (/\/api\/?$/i.test(raw)) {
         return raw.replace(/\/$/, '');
