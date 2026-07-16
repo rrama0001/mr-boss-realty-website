@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { renderIndexWithShareMeta } = require('./server/ogMeta');
 
 const PORT = process.env.PORT || 5174;
 const DIST = path.join(__dirname, 'dist');
@@ -44,6 +45,31 @@ function serveFile(filePath, res) {
     });
 }
 
+async function serveSpaIndex(res, urlPath) {
+    const indexPath = path.join(DIST, 'index.html');
+
+    fs.readFile(indexPath, async (err, data) => {
+        if (err) {
+            send(res, 500, 'Internal Server Error');
+            return;
+        }
+
+        try {
+            const html = await renderIndexWithShareMeta(data.toString('utf8'), urlPath);
+            send(res, 200, html, {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-cache',
+            });
+        } catch (renderErr) {
+            console.error('OG meta injection failed:', renderErr);
+            send(res, 200, data, {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-cache',
+            });
+        }
+    });
+}
+
 const server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
     const safePath = path.normalize(urlPath).replace(/^(\.\.[/\\])+/, '');
@@ -56,11 +82,17 @@ const server = http.createServer((req, res) => {
 
     fs.stat(filePath, (err, stats) => {
         if (!err && stats.isFile()) {
+            // Always enrich the root index.html for crawlers/share previews.
+            if (path.basename(filePath) === 'index.html') {
+                serveSpaIndex(res, urlPath === '/' || safePath === path.sep ? '/' : urlPath);
+                return;
+            }
             serveFile(filePath, res);
             return;
         }
-        // Vue Router history mode: fall back to index.html
-        serveFile(path.join(DIST, 'index.html'), res);
+
+        // Vue Router history mode: fall back to index.html with route-specific OG tags.
+        serveSpaIndex(res, urlPath);
     });
 });
 

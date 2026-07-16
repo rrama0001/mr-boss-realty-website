@@ -11,6 +11,15 @@ export function getSiteUrl(path = '/') {
     return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+function toAbsoluteUrl(url) {
+    const value = String(url || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith('//')) return `https:${value}`;
+    if (value.startsWith('/')) return `${SITE_URL}${value}`;
+    return `${SITE_URL}/${value}`;
+}
+
 export function setMetaTag(attr, key, content) {
     if (content === undefined || content === null || content === '') return;
 
@@ -38,7 +47,7 @@ export function updatePageMeta(meta = {}) {
     const description = meta.description || DEFAULT_DESCRIPTION;
     const canonical = meta.canonical || getSiteUrl(meta.path || '/');
     const robots = meta.robots || 'index, follow';
-    const ogImage = meta.ogImage || logoUrl;
+    const ogImage = toAbsoluteUrl(meta.ogImage || logoUrl) || getSiteUrl('/og-default.png');
 
     document.title = title;
     setMetaTag('name', 'description', description);
@@ -64,6 +73,7 @@ export function getDefaultPageMeta() {
         description: DEFAULT_DESCRIPTION,
         path: '/',
         canonical: getSiteUrl('/'),
+        ogImage: getSiteUrl('/og-default.png'),
     };
 }
 

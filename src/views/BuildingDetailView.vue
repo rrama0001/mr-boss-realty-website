@@ -580,7 +580,7 @@ export default {
                 title: `${this.buildingTitle} | ${this.displayProjectName || 'Mr. Boss Realty'}`,
                 description: this.buildSeoDescription(),
                 path,
-                ogImage: this.building.image || undefined,
+                ogImage: resolveMediaUrl(this.building.image) || undefined,
                 canonical: getSiteUrl(path),
             });
         },

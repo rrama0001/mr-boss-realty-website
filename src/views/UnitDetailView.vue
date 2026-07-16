@@ -565,7 +565,7 @@ export default {
                 title: `${this.unitTitle} | ${this.displayProjectName || 'Mr. Boss Realty'}`,
                 description: this.buildSeoDescription(),
                 path,
-                ogImage: this.unit.image || undefined,
+                ogImage: resolveMediaUrl(this.unit.image) || undefined,
                 canonical: getSiteUrl(path),
             });
         },

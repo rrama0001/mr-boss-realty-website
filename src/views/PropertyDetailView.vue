@@ -778,7 +778,7 @@ export default {
                 description: this.property.description
                     || `View units and details for ${this.displayProjectName} with Mr. Boss Realty.`,
                 path,
-                ogImage: this.property.image || undefined,
+                ogImage: resolveMediaUrl(this.property.image) || undefined,
                 canonical: getSiteUrl(path),
             });
         },
