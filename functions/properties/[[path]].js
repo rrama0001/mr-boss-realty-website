@@ -1,14 +1,14 @@
 /**
  * Cloudflare Pages Function: inject Open Graph tags for /properties/* URLs.
- * Facebook/LinkedIn crawlers do not run the Vue SPA, so meta must be in the HTML response.
+ * Uses the public API listing payload (image URLs point at Cloudflare R2).
  *
- * Env (Pages → Settings → Environment variables):
- *   API_URL=https://api.mrbossrealty.com/api
- *   WEBSITE_URL=https://www.mrbossrealty.com
+ * Runtime env (optional — falls back to VITE_* then defaults):
+ *   VITE_API_URL / API_URL
+ *   VITE_SITE_URL / WEBSITE_URL
  */
 
 const DEFAULT_API = 'https://api.mrbossrealty.com/api';
-const DEFAULT_SITE = 'https://www.mrbossrealty.com';
+const DEFAULT_SITE = 'https://mrbossrealty.com';
 const DEFAULT_TITLE = 'Mr. Boss Realty | Find Your Dream Home in the Philippines';
 const DEFAULT_DESCRIPTION =
     'Browse quality properties for sale and rent across the Philippines with AI-assisted search and expert guidance.';
@@ -22,11 +22,24 @@ function escapeHtml(value = '') {
         .replace(/'/g, '&#39;');
 }
 
-function toAbsoluteUrl(url, siteUrl) {
+function apiOriginFromBase(apiBase) {
+    return String(apiBase || DEFAULT_API).replace(/\/api\/?$/i, '').replace(/\/$/, '');
+}
+
+/**
+ * Media lives on R2 and is served via the API app (`/uploads/*`).
+ * Absolute R2 / API URLs are kept; relative `/uploads` paths resolve to the API origin.
+ */
+function toAbsoluteMediaUrl(url, { siteUrl, apiOrigin }) {
     const value = String(url || '').trim();
     if (!value) return '';
     if (/^https?:\/\//i.test(value)) return value;
     if (value.startsWith('//')) return `https:${value}`;
+
+    const uploadPath = value.replace(/^\/api\/uploads\//i, '/uploads/');
+    if (uploadPath.startsWith('/uploads/')) {
+        return `${apiOrigin}${uploadPath}`;
+    }
     if (value.startsWith('/')) return `${siteUrl}${value}`;
     return `${siteUrl}/${value}`;
 }
@@ -38,9 +51,49 @@ function stripHtml(value = '') {
         .trim();
 }
 
+function normalizeApiBase(value) {
+    const raw = String(value || '').trim().replace(/\/$/, '');
+    if (!raw) return DEFAULT_API;
+    if (/\/api$/i.test(raw)) return raw;
+    return `${raw}/api`;
+}
+
+function normalizeSiteUrl(value, fallback) {
+    return String(value || fallback || DEFAULT_SITE).trim().replace(/\/$/, '');
+}
+
+/**
+ * Prefer listing cover/default image from API (R2 public URL or API /uploads proxy).
+ * Prefer JPG/PNG among gallery candidates; fall back to WebP cover; logo last.
+ */
+function pickShareImage(data = {}, { siteUrl = DEFAULT_SITE, apiOrigin } = {}) {
+    const origin = apiOrigin || apiOriginFromBase(DEFAULT_API);
+    const resolve = (url) => toAbsoluteMediaUrl(url, { siteUrl, apiOrigin: origin });
+
+    const gallery = [
+        data.image,
+        data.cover_image_url,
+        ...(Array.isArray(data.asset_images) ? data.asset_images : []),
+    ]
+        .map(resolve)
+        .filter(Boolean);
+
+    if (gallery.length) {
+        const preferred = gallery.find((url) => /\.(jpe?g|png)(\?|#|$)/i.test(url));
+        return preferred || gallery[0];
+    }
+
+    const logo = resolve(data.logo);
+    return logo || `${siteUrl}/og-default.png`;
+}
+
 function upsertMeta(html, attr, key, content) {
     const safe = escapeHtml(content);
-    const pattern = new RegExp(`<meta[^>]+${attr}=["']${key}["'][^>]*>`, 'i');
+    // Support single-line and multiline <meta> tags in index.html.
+    const pattern = new RegExp(
+        `<meta\\b[^>]*?\\b${attr}=["']${key}["'][^>]*>`,
+        'is',
+    );
     if (pattern.test(html)) {
         return html.replace(pattern, `<meta ${attr}="${key}" content="${safe}">`);
     }
@@ -77,6 +130,7 @@ function injectShareMeta(html, meta) {
     next = upsertMeta(next, 'property', 'og:description', meta.description);
     next = upsertMeta(next, 'property', 'og:url', meta.url);
     next = upsertMeta(next, 'property', 'og:image', meta.image);
+    next = upsertMeta(next, 'property', 'og:image:secure_url', meta.image);
     next = upsertMeta(next, 'name', 'twitter:card', 'summary_large_image');
     next = upsertMeta(next, 'name', 'twitter:title', meta.title);
     next = upsertMeta(next, 'name', 'twitter:description', meta.description);
@@ -87,17 +141,24 @@ function injectShareMeta(html, meta) {
 async function fetchJson(url) {
     try {
         const res = await fetch(url, {
-            headers: { Accept: 'application/json' },
-            cf: { cacheTtl: 60, cacheEverything: true },
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'User-Agent': 'MrBossRealty-OG/1.0',
+            },
         });
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.error('OG API fetch failed', res.status, url);
+            return null;
+        }
         return res.json();
-    } catch {
+    } catch (err) {
+        console.error('OG API fetch error', url, err);
         return null;
     }
 }
 
-function buildListingMeta(data, pageUrl, siteUrl) {
+function buildListingMeta(data, pageUrl, siteUrl, apiOrigin) {
     const isBuilding = Boolean(data?.is_whole_property_listing);
     const titleBase = isBuilding
         ? (data.building_name || 'Property listing')
@@ -114,11 +175,11 @@ function buildListingMeta(data, pageUrl, siteUrl) {
             'View pricing and details with Mr. Boss Realty.',
         ].filter(Boolean).join(' '),
         url: pageUrl,
-        image: toAbsoluteUrl(data.image || data.logo, siteUrl) || `${siteUrl}/og-default.png`,
+        image: pickShareImage(data, { siteUrl, apiOrigin }),
     };
 }
 
-function buildPropertyMeta(data, pageUrl, siteUrl) {
+function buildPropertyMeta(data, pageUrl, siteUrl, apiOrigin) {
     const name = data.project_name || data.name || 'Property';
     const city = data.city || '';
     const description = stripHtml(data.description)
@@ -128,28 +189,28 @@ function buildPropertyMeta(data, pageUrl, siteUrl) {
         title: `${name} | Mr. Boss Realty`,
         description: description.slice(0, 200),
         url: pageUrl,
-        image: toAbsoluteUrl(data.image || data.logo || data.cover_image_url, siteUrl)
-            || `${siteUrl}/og-default.png`,
+        image: pickShareImage(data, { siteUrl, apiOrigin }),
     };
 }
 
 async function resolveMeta(pathname, env, requestOrigin) {
-    const apiBase = String(env.API_URL || env.VITE_API_URL || DEFAULT_API).replace(/\/$/, '');
-    const siteUrl = String(env.WEBSITE_URL || env.VITE_SITE_URL || requestOrigin || DEFAULT_SITE)
-        .replace(/\/$/, '');
+    const apiBase = normalizeApiBase(env.API_URL || env.VITE_API_URL || DEFAULT_API);
+    const apiOrigin = apiOriginFromBase(apiBase);
+    const siteUrl = normalizeSiteUrl(
+        env.WEBSITE_URL || env.VITE_SITE_URL,
+        requestOrigin || DEFAULT_SITE,
+    );
     const cleanPath = pathname.replace(/\/$/, '') || '/';
-    // Prefer the exact host being scraped (mrbossrealty.com vs www).
-    const pageHost = String(requestOrigin || siteUrl).replace(/\/$/, '');
+    const pageHost = normalizeSiteUrl(requestOrigin, siteUrl);
     const pageUrl = `${pageHost}${cleanPath}`;
     const parts = cleanPath.split('/').filter(Boolean);
-    // ["properties", city, project, listingRef?]
 
     if (parts[0] === 'properties' && parts.length >= 4) {
         const [, citySlug, projectSlug, listingRef] = parts;
         const data = await fetchJson(
             `${apiBase}/projects/public/${encodeURIComponent(citySlug)}/${encodeURIComponent(projectSlug)}/${encodeURIComponent(listingRef)}`,
         );
-        if (data) return buildListingMeta(data, pageUrl, siteUrl);
+        if (data) return buildListingMeta(data, pageUrl, siteUrl, apiOrigin);
     }
 
     if (parts[0] === 'properties' && parts.length === 3) {
@@ -157,7 +218,7 @@ async function resolveMeta(pathname, env, requestOrigin) {
         const data = await fetchJson(
             `${apiBase}/projects/public/${encodeURIComponent(citySlug)}/${encodeURIComponent(projectSlug)}`,
         );
-        if (data) return buildPropertyMeta(data, pageUrl, siteUrl);
+        if (data) return buildPropertyMeta(data, pageUrl, siteUrl, apiOrigin);
     }
 
     return {
@@ -172,7 +233,16 @@ export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
 
-    // Only enrich document navigations; let asset requests fall through if any.
+    // Debug helper: /properties/...?og_debug=1 returns resolved meta JSON.
+    if (url.searchParams.get('og_debug') === '1') {
+        const meta = await resolveMeta(url.pathname, env, url.origin);
+        return Response.json({
+            meta,
+            apiBase: normalizeApiBase(env.API_URL || env.VITE_API_URL || DEFAULT_API),
+            siteUrl: normalizeSiteUrl(env.WEBSITE_URL || env.VITE_SITE_URL, url.origin),
+        });
+    }
+
     const accept = request.headers.get('Accept') || '';
     if (accept.includes('text/css') || accept.includes('application/javascript')) {
         return context.next();

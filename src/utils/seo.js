@@ -2,6 +2,9 @@ import { appName, appTagline } from '@/config/app';
 import logoUrl from '@/assets/images/mr-boss-realty-logo.png';
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://www.mrbossrealty.com').replace(/\/$/, '');
+const API_ORIGIN = (import.meta.env.VITE_API_URL || 'https://api.mrbossrealty.com/api')
+    .replace(/\/api\/?$/i, '')
+    .replace(/\/$/, '');
 
 const DEFAULT_DESCRIPTION =
     'Mr. Boss Realty helps you find condominiums, houses, and commercial properties across the Philippines with trusted guidance from inquiry to closing.';
@@ -11,13 +14,23 @@ export function getSiteUrl(path = '/') {
     return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+/**
+ * Absolute media URLs for OG tags. Uploads live on R2 / API `/uploads`, not the website host.
+ */
 function toAbsoluteUrl(url) {
     const value = String(url || '').trim();
     if (!value) return '';
     if (/^https?:\/\//i.test(value)) return value;
     if (value.startsWith('//')) return `https:${value}`;
+
+    const uploadPath = value.replace(/^\/api\/uploads\//i, '/uploads/');
+    if (uploadPath.startsWith('/uploads/')) {
+        return `${API_ORIGIN}${uploadPath}`;
+    }
     if (value.startsWith('/')) return `${SITE_URL}${value}`;
-    return `${SITE_URL}/${value}`;
+    if (value.startsWith('data:') || value.startsWith('blob:')) return value;
+    // Bundled assets (e.g. logo import) are site-relative after Vite build.
+    return `${SITE_URL}/${value.replace(/^\.\//, '')}`;
 }
 
 export function setMetaTag(attr, key, content) {

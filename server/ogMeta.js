@@ -24,6 +24,10 @@ function getApiBaseUrl() {
     return `${raw.replace(/\/$/, '')}/api`;
 }
 
+function getApiOrigin() {
+    return getApiBaseUrl().replace(/\/api\/?$/i, '').replace(/\/$/, '');
+}
+
 function escapeHtml(value = '') {
     return String(value)
         .replace(/&/g, '&amp;')
@@ -33,17 +37,51 @@ function escapeHtml(value = '') {
         .replace(/'/g, '&#39;');
 }
 
-function toAbsoluteUrl(url, siteUrl = getSiteUrl()) {
+/**
+ * Media lives on R2 and is served via the API app (`/uploads/*`).
+ * Absolute R2 / API URLs are kept; relative `/uploads` paths resolve to the API origin.
+ */
+function toAbsoluteMediaUrl(url, siteUrl = getSiteUrl(), apiOrigin = getApiOrigin()) {
     const value = String(url || '').trim();
     if (!value) return '';
     if (/^https?:\/\//i.test(value)) return value;
     if (value.startsWith('//')) return `https:${value}`;
+
+    const uploadPath = value.replace(/^\/api\/uploads\//i, '/uploads/');
+    if (uploadPath.startsWith('/uploads/')) {
+        return `${apiOrigin}${uploadPath}`;
+    }
     if (value.startsWith('/')) return `${siteUrl}${value}`;
     return `${siteUrl}/${value}`;
 }
 
 function defaultOgImage(siteUrl = getSiteUrl()) {
     return `${siteUrl}/og-default.png`;
+}
+
+/**
+ * Prefer listing cover/default image (R2 public URL or API /uploads proxy).
+ * Prefer JPG/PNG among gallery candidates; fall back to WebP cover; logo last.
+ */
+function pickShareImage(data = {}, siteUrl = getSiteUrl()) {
+    const apiOrigin = getApiOrigin();
+    const resolve = (url) => toAbsoluteMediaUrl(url, siteUrl, apiOrigin);
+
+    const gallery = [
+        data.image,
+        data.cover_image_url,
+        ...(Array.isArray(data.asset_images) ? data.asset_images : []),
+    ]
+        .map(resolve)
+        .filter(Boolean);
+
+    if (gallery.length) {
+        const preferred = gallery.find((url) => /\.(jpe?g|png)(\?|#|$)/i.test(url));
+        return preferred || gallery[0];
+    }
+
+    const logo = resolve(data.logo);
+    return logo || defaultOgImage(siteUrl);
 }
 
 function stripHtml(value = '') {
@@ -91,7 +129,7 @@ function buildListingMeta(data, pageUrl) {
         title,
         description,
         url: pageUrl,
-        image: toAbsoluteUrl(data.image || data.logo, siteUrl) || defaultOgImage(siteUrl),
+        image: pickShareImage(data, siteUrl),
         type: 'website',
     };
 }
@@ -107,8 +145,7 @@ function buildPropertyMeta(data, pageUrl) {
         title: `${name} | Mr. Boss Realty`,
         description: description.slice(0, 200),
         url: pageUrl,
-        image: toAbsoluteUrl(data.image || data.logo || data.cover_image_url, siteUrl)
-            || defaultOgImage(siteUrl),
+        image: pickShareImage(data, siteUrl),
         type: 'website',
     };
 }
@@ -215,6 +252,7 @@ function injectShareMeta(html, meta) {
     next = upsertMeta(next, 'property', 'og:description', meta.description);
     next = upsertMeta(next, 'property', 'og:url', meta.url);
     next = upsertMeta(next, 'property', 'og:image', meta.image);
+    next = upsertMeta(next, 'property', 'og:image:secure_url', meta.image);
     next = upsertMeta(next, 'name', 'twitter:card', 'summary_large_image');
     next = upsertMeta(next, 'name', 'twitter:title', meta.title);
     next = upsertMeta(next, 'name', 'twitter:description', meta.description);
@@ -233,5 +271,6 @@ module.exports = {
     getSiteUrl,
     getApiBaseUrl,
     defaultOgImage,
-    toAbsoluteUrl,
+    toAbsoluteMediaUrl,
+    toAbsoluteUrl: toAbsoluteMediaUrl,
 };
