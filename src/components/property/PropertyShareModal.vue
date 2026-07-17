@@ -87,7 +87,7 @@ import {
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
 import { resolveMediaUrl } from '@/utils/mediaUrls';
 import brandLogo from '@/assets/images/mr-boss-realty-logo.png';
-import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
+import fallbackCoverImage from '@/assets/images/unit-default-image.jpg';
 
 export default {
     name: 'PropertyShareModal',

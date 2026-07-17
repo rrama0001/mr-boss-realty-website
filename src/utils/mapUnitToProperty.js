@@ -11,9 +11,9 @@ import {
     isUnitRentListing,
     pickUnitDisplayPrice,
 } from '@/utils/unitListing';
-import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
+import unitDefaultImage from '@/assets/images/unit-default-image.jpg';
 
-const DEFAULT_UNIT_IMAGE = fallbackCoverImage;
+const DEFAULT_UNIT_IMAGE = unitDefaultImage;
 
 function getUnitCardImage(unit = {}) {
     const candidate = unit.image;

@@ -63,28 +63,24 @@ function normalizeSiteUrl(value, fallback) {
 }
 
 /**
- * Prefer listing cover/default image from API (R2 public URL or API /uploads proxy).
- * Prefer JPG/PNG among gallery candidates; fall back to WebP cover; logo last.
+ * Use the same image returned for the website listing card. For units, the API's
+ * `image` field is the selected unit cover/default image.
  */
 function pickShareImage(data = {}, { siteUrl = DEFAULT_SITE, apiOrigin } = {}) {
     const origin = apiOrigin || apiOriginFromBase(DEFAULT_API);
     const resolve = (url) => toAbsoluteMediaUrl(url, { siteUrl, apiOrigin: origin });
+    const image = resolve(data.image);
+    if (image) return image;
 
-    const gallery = [
-        data.image,
-        data.cover_image_url,
-        ...(Array.isArray(data.asset_images) ? data.asset_images : []),
-    ]
+    const cover = resolve(data.cover_image_url);
+    if (cover) return cover;
+
+    const firstAsset = (Array.isArray(data.asset_images) ? data.asset_images : [])
         .map(resolve)
-        .filter(Boolean);
+        .find(Boolean);
+    if (firstAsset) return firstAsset;
 
-    if (gallery.length) {
-        const preferred = gallery.find((url) => /\.(jpe?g|png)(\?|#|$)/i.test(url));
-        return preferred || gallery[0];
-    }
-
-    const logo = resolve(data.logo);
-    return logo || `${siteUrl}/og-default.png`;
+    return resolve(data.logo) || `${siteUrl}/og-default.png`;
 }
 
 function upsertMeta(html, attr, key, content) {

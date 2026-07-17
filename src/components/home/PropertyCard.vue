@@ -62,7 +62,7 @@ import LocationWithCity from '@/components/property/LocationWithCity.vue';
 import PropertyCardMenu from '@/components/property/PropertyCardMenu.vue';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
 import { resolveMediaUrl } from '@/utils/mediaUrls';
-import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
+import fallbackCoverImage from '@/assets/images/unit-default-image.jpg';
 
 export default {
     name: 'PropertyCard',
