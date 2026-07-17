@@ -16,7 +16,7 @@ export const ABOUT_PAGE = {
             id: 'about',
             title: 'About Mr. Boss Realty',
             content: `
-                <p>At Mr. Boss Realty, we are bridging the gap between deep-rooted market expertise and the next generation of digital innovation. Founded five years ago by broker Mike Dalmacio, our firm was built on a legacy of trust and local market knowledge. Today, we are transforming that foundation into a high-performance, technology-driven experience that offers the smarter way to find your next property. Anywhere, anytime.</p>
+                <p>At Mr. Boss Realty, we are bridging the gap between deep-rooted market expertise and the next generation of digital innovation. Founded in 2021 by broker Mike Dalmacio, our firm was built on a legacy of trust and local market knowledge. Today, we are transforming that foundation into a high-performance, technology-driven experience that offers the smarter way to find your next property. Anywhere, anytime.</p>
             `,
         },
         {

@@ -120,6 +120,23 @@ export function buildPropertyShareText(property = {}, url = '') {
     return parts.join('\n');
 }
 
+/**
+ * Messenger has no plain web-share URL. Mobile uses the app deep link;
+ * desktop needs Facebook's send dialog, which requires a Facebook App ID
+ * (set VITE_FACEBOOK_APP_ID). Without one, we still try the deep link so
+ * users with the Messenger desktop app installed can share.
+ */
+function buildMessengerShareHref(url, encodedUrl) {
+    const appId = String(import.meta.env.VITE_FACEBOOK_APP_ID || '').trim();
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+
+    if (!isMobile && appId) {
+        return `https://www.facebook.com/dialog/send?app_id=${appId}&link=${encodedUrl}&redirect_uri=${encodedUrl}`;
+    }
+
+    return `fb-messenger://share?link=${encodedUrl}`;
+}
+
 export function getPropertyShareTargets(url = '', text = '', title = 'Property listing') {
     const encodedUrl = encodeURIComponent(url);
     const encodedText = encodeURIComponent(text);
@@ -150,6 +167,15 @@ export function getPropertyShareTargets(url = '', text = '', title = 'Property l
             href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`,
             popup: true,
             windowName: 'fbShare',
+        },
+        {
+            key: 'messenger',
+            label: 'Messenger',
+            icon: 'ti ti-brand-messenger',
+            tone: 'messenger',
+            href: buildMessengerShareHref(url, encodedUrl),
+            popup: true,
+            windowName: 'messengerShare',
         },
         {
             key: 'x',
@@ -185,22 +211,14 @@ export function getPropertyShareTargets(url = '', text = '', title = 'Property l
             tone: 'email',
             href: `mailto:?subject=${encodedTitle}&body=${encodedText}`,
         },
-        {
-            key: 'reddit',
-            label: 'Reddit',
-            icon: 'ti ti-brand-reddit',
-            tone: 'reddit',
-            href: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
-            popup: true,
-            windowName: 'redditShare',
-        },
     ];
 }
 
 export function openShareTarget(href, { popup = false, windowName = 'propertyShare' } = {}) {
     if (!href) return;
 
-    if (href.startsWith('mailto:')) {
+    // App schemes (mailto:, fb-messenger:) must navigate, not open a popup.
+    if (!/^https?:\/\//i.test(href)) {
         window.location.assign(href);
         return;
     }
