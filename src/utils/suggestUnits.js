@@ -43,21 +43,39 @@ function getUnitComparablePrice(unit = {}) {
 }
 
 /**
- * Similar-price band by leading digit + magnitude.
- * Example: 3,000,400 → [3,000,000, 4,000,000) i.e. 3,***,***
+ * Pick the floor/ceiling scale from the price magnitude:
+ * million+ → 1,000,000; hundred thousand → 100,000; ten thousand → 10,000; etc.
  */
-function getPriceLeadingBand(price) {
+function getSimilarPriceScale(value) {
+    if (value >= 1_000_000) return 1_000_000;
+    if (value >= 100_000) return 100_000;
+    if (value >= 10_000) return 10_000;
+    if (value >= 1_000) return 1_000;
+    if (value >= 100) return 100;
+    if (value >= 10) return 10;
+    return 1;
+}
+
+/**
+ * Similar-price band: [floor(base), ceiling(base) - 1] using the magnitude scale.
+ * Example: ₱15,123,456 → [₱15,000,000, ₱15,999,999]
+ * Example: ₱450,000 → [₱400,000, ₱499,999]
+ */
+function getSimilarPriceBand(price) {
     const value = Math.floor(Math.abs(Number(price)));
     if (!Number.isFinite(value) || value <= 0) return null;
 
-    const digits = String(value);
-    const firstDigit = Number(digits[0]);
-    if (!Number.isInteger(firstDigit) || firstDigit < 1) return null;
+    const scale = getSimilarPriceScale(value);
+    const floor = Math.floor(value / scale) * scale;
+    let ceiling = Math.ceil(value / scale) * scale;
+    // Exact boundary (e.g. ₱15,000,000): ceil === floor, so move to the next bucket.
+    if (ceiling === floor) {
+        ceiling = floor + scale;
+    }
 
-    const magnitude = 10 ** (digits.length - 1);
     return {
-        min: firstDigit * magnitude,
-        maxExclusive: (firstDigit + 1) * magnitude,
+        min: floor,
+        max: ceiling - 1,
     };
 }
 
@@ -69,12 +87,12 @@ function getPriceSimilarity(candidate, current) {
         return { match: false, score: 0 };
     }
 
-    const band = getPriceLeadingBand(currentPrice);
+    const band = getSimilarPriceBand(currentPrice);
     if (!band) {
         return { match: false, score: 0 };
     }
 
-    const inBand = candidatePrice >= band.min && candidatePrice < band.maxExclusive;
+    const inBand = candidatePrice >= band.min && candidatePrice <= band.max;
     if (!inBand) {
         return { match: false, score: 0 };
     }

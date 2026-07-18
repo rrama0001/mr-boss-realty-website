@@ -97,6 +97,7 @@
                     <div class="unit-detail__specs card">
                         <div class="card-body unit-detail__body unit-detail__body--with-gallery">
                             <div class="unit-detail__specs-column">
+                                <PropertyCardMenu :property="listingMenuProperty" />
                                 <dl class="unit-detail__spec-list">
                                     <template v-for="item in specItems" :key="item.key">
                                         <dt>{{ item.label }}</dt>
@@ -252,6 +253,7 @@ import PropertyListingBreadcrumb from '@/components/property/PropertyListingBrea
 import LocationWithCity from '@/components/property/LocationWithCity.vue';
 import InterestedButton from '@/components/InterestedButton.vue';
 import PropertyCard from '@/components/home/PropertyCard.vue';
+import PropertyCardMenu from '@/components/property/PropertyCardMenu.vue';
 import SectionHeading from '@/components/home/SectionHeading.vue';
 import defaultPropertyLogo from '@/assets/images/property-default-logo.svg';
 import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
@@ -280,6 +282,7 @@ export default {
         InterestedButton,
         LocationWithCity,
         PropertyCard,
+        PropertyCardMenu,
         PropertyListingBreadcrumb,
         SectionHeading,
     },
