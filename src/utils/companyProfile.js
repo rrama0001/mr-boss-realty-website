@@ -6,8 +6,8 @@ let loadPromise = null;
 
 export function mapCompanyProfileToContact(profile = {}) {
     return {
-        company_name: profile.company_name || '',
-        tagline: profile.tagline || '',
+        company_name: profile.company_name || CONTACT_INFO.company_name,
+        tagline: profile.tagline || CONTACT_INFO.tagline,
         address: profile.address || CONTACT_INFO.address,
         phone: profile.phone || CONTACT_INFO.phone,
         email: profile.email || CONTACT_INFO.email,
@@ -22,6 +22,10 @@ export function mapCompanyProfileToContact(profile = {}) {
         legal_name: profile.legal_name || '',
         privacy_email: profile.privacy_email || '',
     };
+}
+
+export function getCachedCompanyTagline() {
+    return cachedContactInfo?.tagline || CONTACT_INFO.tagline;
 }
 
 export async function loadCompanyContactInfo() {

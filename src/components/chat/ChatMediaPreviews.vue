@@ -60,7 +60,11 @@ export default {
             this.brokenThumbs = new Set(this.brokenThumbs);
         },
         openViewer(item) {
-            this.$openMediaViewer(item);
+            const index = this.items.findIndex((entry) => entry.url === item.url);
+            this.$openMediaViewer({
+                items: this.items,
+                index: index >= 0 ? index : 0,
+            });
         },
     },
 };

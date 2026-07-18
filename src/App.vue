@@ -28,6 +28,8 @@ export default {
         onMediaClick(event) {
             if (event.defaultPrevented) return;
             if (event.target.closest('.media-previews__item')) return;
+            if (event.target.closest('.unit-detail__gallery-thumb')) return;
+            if (event.target.closest('.property-hero__bg')) return;
             if (event.target.closest('.media-viewer')) return;
             if (event.target.closest('.site-header__brand, .site-footer__brand-block, .property-detail__logo-wrap')) {
                 return;

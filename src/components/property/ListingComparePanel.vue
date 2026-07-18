@@ -109,19 +109,26 @@
                                     :class="{
                                         'unit-detail__gallery-thumb--active': isGalleryItemActive(item),
                                         'unit-detail__gallery-thumb--video': item.type === 'video',
+                                        'unit-detail__gallery-thumb--fallback': !hasGalleryThumb(item),
                                     }"
-                                    :aria-label="item.type === 'video'
-                                        ? (item.label || `Play video ${index + 1}`)
-                                        : (item.label || `View photo ${index + 1}`)"
+                                    :aria-label="galleryItemAriaLabel(item, index)"
                                     :aria-current="isGalleryItemActive(item) ? 'true' : null"
                                     @click="onGallerySelect(item)"
                                 >
                                     <img
+                                        v-if="hasGalleryThumb(item)"
                                         :src="item.thumbnail"
-                                        :alt="item.label || `${title} photo ${index + 1}`"
+                                        :alt="item.label || `${title} media ${index + 1}`"
                                         loading="lazy"
                                         @error="onGalleryThumbError(item.url)"
                                     />
+                                    <span
+                                        v-else
+                                        class="unit-detail__gallery-fallback"
+                                        aria-hidden="true"
+                                    >
+                                        <i :class="galleryItemIcon(item.type)"></i>
+                                    </span>
                                     <span
                                         v-if="item.type === 'video'"
                                         class="unit-detail__gallery-play"
@@ -146,6 +153,7 @@
 <script>
 import InterestedButton from '@/components/InterestedButton.vue';
 import { buildListingGalleryItems } from '@/utils/listingGallery';
+import { getPreviewIconClass } from '@/utils/mediaUrls';
 import {
     buildListingSpecItems,
     formatListingPrice,
@@ -253,7 +261,7 @@ export default {
             return buildListingGalleryItems(this.kind, this.listing);
         },
         visibleGalleryItems() {
-            return this.galleryItems.filter((item) => !this.brokenGalleryThumbs[item.url]);
+            return this.galleryItems;
         },
     },
     watch: {
@@ -271,18 +279,33 @@ export default {
             this.$emit('spec-highlight', specKey);
         },
         isGalleryItemActive(item) {
-            if (item.type === 'video') return false;
+            if (item.type !== 'image') return false;
 
             const active = this.activeGalleryUrl || this.listing?.image || '';
             return item.url === active || item.thumbnail === active;
         },
+        hasGalleryThumb(item) {
+            return Boolean(item?.thumbnail) && !this.brokenGalleryThumbs[item.url];
+        },
+        galleryItemIcon(type) {
+            return getPreviewIconClass(type);
+        },
+        galleryItemAriaLabel(item, index) {
+            if (item.label) return item.label;
+            if (item.type === 'video') return `Play video ${index + 1}`;
+            if (item.type === 'image') return `View photo ${index + 1}`;
+            return `View file ${index + 1}`;
+        },
         onGallerySelect(item) {
-            if (item.type === 'video') {
-                this.$openMediaViewer(item);
-                return;
+            if (item.type === 'image') {
+                this.activeGalleryUrl = item.url;
             }
 
-            this.activeGalleryUrl = item.url;
+            const items = this.visibleGalleryItems;
+            if (!items.length) return;
+
+            const index = items.findIndex((entry) => entry.url === item.url);
+            this.$openMediaViewer({ items, index: index >= 0 ? index : 0 });
         },
         onGalleryThumbError(url) {
             this.brokenGalleryThumbs = {

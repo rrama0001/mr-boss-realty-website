@@ -17,9 +17,7 @@
                     <AiOrb :active="true" :thinking="false" />
                 </div>
                 <p class="home-hero__subtitle">Mr. Boss Realty AI</p>
-                <p class="home-hero__tagline">
-                    The smarter way to find condos, houses, and rentals—anywhere, anytime.
-                </p>
+                <p class="home-hero__tagline">{{ tagline }}</p>
                 <h1 class="home-hero__title">Find Your Dream Home in the Philippines</h1>
             </div>
 
@@ -63,6 +61,12 @@ import {
 export default {
     name: 'HomeHero',
     components: { AiOrb },
+    props: {
+        tagline: {
+            type: String,
+            default: 'The smarter way to find condos, houses, and rentals—anywhere, anytime.',
+        },
+    },
     data() {
         return {
             heroBgUrl,

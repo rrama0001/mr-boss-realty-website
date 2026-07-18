@@ -39,6 +39,55 @@
 	animation: properties-spin 0.8s linear infinite;
 }
 
+.properties-page__pagination {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-top: 2rem;
+}
+
+.properties-page__pagination-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	min-height: 2.5rem;
+	padding: 0.5rem 0.8rem;
+	border: 1px solid rgba(15, 23, 42, 0.14);
+	border-radius: 0.5rem;
+	background: #fff;
+	color: #334155;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover {
+		border-color: var(--app-primary);
+		color: var(--app-primary);
+	}
+
+	&--number {
+		min-width: 2.5rem;
+		padding-inline: 0.5rem;
+	}
+
+	&--active {
+		border-color: var(--app-primary);
+		background: var(--app-primary);
+		color: #fff;
+
+		&:hover {
+			color: #fff;
+		}
+	}
+
+	&--disabled {
+		pointer-events: none;
+		opacity: 0.45;
+	}
+}
+
 @keyframes properties-spin {
 	to {
 		transform: rotate(360deg);

@@ -181,6 +181,8 @@ export const POPULAR_PLACES = [
 
 /** Fallback contact details. Live values come from GET /api/company-profile. */
 export const CONTACT_INFO = {
+    company_name: 'Mr. Boss Realty',
+    tagline: 'The smarter way to find condos, houses, and rentals—anywhere, anytime.',
     address: 'Cebu City, Philippines',
     phone: '+63 917 000 0000',
     email: 'hello@mrbossrealty.com',

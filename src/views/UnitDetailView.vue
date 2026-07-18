@@ -19,6 +19,12 @@
                     width="1920"
                     height="640"
                     fetchpriority="high"
+                    role="button"
+                    tabindex="0"
+                    aria-label="View listing photos"
+                    @click="openCoverViewer"
+                    @keydown.enter.prevent="openCoverViewer"
+                    @keydown.space.prevent="openCoverViewer"
                 />
                 <div class="property-hero__overlay" aria-hidden="true"></div>
                 <div class="container-xl property-hero__inner">
@@ -126,19 +132,26 @@
                                             :class="{
                                                 'unit-detail__gallery-thumb--active': isGalleryItemActive(item),
                                                 'unit-detail__gallery-thumb--video': item.type === 'video',
+                                                'unit-detail__gallery-thumb--fallback': !hasGalleryThumb(item),
                                             }"
-                                            :aria-label="item.type === 'video'
-                                                ? (item.label || `Play video ${index + 1}`)
-                                                : `View photo ${index + 1}`"
+                                            :aria-label="galleryItemAriaLabel(item, index)"
                                             :aria-current="isGalleryItemActive(item) ? 'true' : null"
                                             @click="onGallerySelect(item)"
                                         >
                                             <img
+                                                v-if="hasGalleryThumb(item)"
                                                 :src="item.thumbnail"
-                                                :alt="`${unitTitle} photo ${index + 1}`"
+                                                :alt="item.label || `${unitTitle} media ${index + 1}`"
                                                 loading="lazy"
                                                 @error="onGalleryThumbError(item.url)"
                                             />
+                                            <span
+                                                v-else
+                                                class="unit-detail__gallery-fallback"
+                                                aria-hidden="true"
+                                            >
+                                                <i :class="galleryItemIcon(item.type)"></i>
+                                            </span>
                                             <span
                                                 v-if="item.type === 'video'"
                                                 class="unit-detail__gallery-play"
@@ -230,7 +243,8 @@ import { buildProjectPublicApiPath } from '@/utils/propertyCity';
 import { mapPublicUnitToPropertyCard, mapUnitToPropertyCard } from '@/utils/mapUnitToProperty';
 import { pickProjectSiblingUnits, pickSimilarUnits, buildSimilarUnitsSubtitle } from '@/utils/suggestUnits';
 import { updatePageMeta, getSiteUrl } from '@/utils/seo';
-import { extractMediaPreviews, resolveMediaUrl } from '@/utils/mediaUrls';
+import { getPreviewIconClass, resolveMediaUrl } from '@/utils/mediaUrls';
+import { buildUnitGalleryItems } from '@/utils/listingGallery';
 import { getWebsitePropertyDisplayName, isPrivateOnWebsite } from '@/utils/propertyDisplayName';
 import { getListingCity } from '@/utils/propertyCity';
 import { scrollToPageTopAfterRender } from '@/utils/scroll';
@@ -371,50 +385,10 @@ export default {
         },
         galleryItems() {
             if (!this.unit) return [];
-
-            const seen = new Set();
-            const items = [];
-
-            const addItem = (preview) => {
-                const url = resolveMediaUrl(preview?.url || preview?.thumbnail || '');
-                const thumbnail = resolveMediaUrl(preview?.thumbnail || preview?.url || '');
-                if (!thumbnail || seen.has(url)) return;
-                seen.add(url);
-                items.push({
-                    url,
-                    thumbnail,
-                    type: preview.type,
-                    label: preview.label,
-                });
-            };
-
-            (this.unit.asset_images || []).forEach((url) => {
-                addItem({
-                    type: 'image',
-                    url,
-                    thumbnail: url,
-                });
-            });
-
-            const hasAssetPhotos = (this.unit.asset_images || []).length > 0;
-
-            extractMediaPreviews(this.unit.images_videos_link || '').forEach((preview) => {
-                if (hasAssetPhotos && preview.type !== 'video') return;
-                addItem(preview);
-            });
-
-            if (!hasAssetPhotos && this.unit.image && isDirectImageUrl(this.unit.image)) {
-                addItem({
-                    type: 'image',
-                    url: this.unit.image,
-                    thumbnail: this.unit.image,
-                });
-            }
-
-            return items;
+            return buildUnitGalleryItems(this.unit);
         },
         visibleGalleryItems() {
-            return this.galleryItems.filter((item) => !this.brokenGalleryThumbs[item.url]);
+            return this.galleryItems;
         },
         hasGalleryImages() {
             return this.visibleGalleryItems.length > 0;
@@ -543,18 +517,44 @@ export default {
             this.$set(this.brokenGalleryThumbs, url, true);
         },
         isGalleryItemActive(item) {
-            if (item.type === 'video') return false;
+            if (item.type !== 'image') return false;
             const active = this.activeGalleryUrl || this.unit?.image || '';
             return item.url === active || item.thumbnail === active;
         },
+        hasGalleryThumb(item) {
+            return Boolean(item?.thumbnail) && !this.brokenGalleryThumbs[item.url];
+        },
+        galleryItemIcon(type) {
+            return getPreviewIconClass(type);
+        },
+        galleryItemAriaLabel(item, index) {
+            if (item.label) return item.label;
+            if (item.type === 'video') return `Play video ${index + 1}`;
+            if (item.type === 'image') return `View photo ${index + 1}`;
+            return `View file ${index + 1}`;
+        },
         onGallerySelect(item) {
-            if (item.type === 'video') {
-                this.$openMediaViewer(item);
-                return;
+            if (item.type === 'image') {
+                this.imageFailed = false;
+                this.activeGalleryUrl = item.url;
+            }
+            this.openGalleryViewer(item);
+        },
+        openCoverViewer() {
+            const activeUrl = this.activeGalleryUrl || this.unit?.image || this.coverImage;
+            this.openGalleryViewer({ type: 'image', url: activeUrl });
+        },
+        openGalleryViewer(startItem = null) {
+            const items = this.visibleGalleryItems;
+            if (!items.length) return;
+
+            let index = 0;
+            if (startItem?.url) {
+                const found = items.findIndex((entry) => entry.url === startItem.url);
+                index = found >= 0 ? found : 0;
             }
 
-            this.imageFailed = false;
-            this.activeGalleryUrl = item.url;
+            this.$openMediaViewer({ items, index });
         },
         updateSeo() {
             if (!this.unit) return;

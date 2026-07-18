@@ -97,6 +97,7 @@
 
 .media-viewer__panel {
 	position: relative;
+	z-index: 1;
 	width: min(92vw, 100%);
 	max-width: 100%;
 	max-height: calc(100vh - 2rem);
@@ -132,7 +133,7 @@
 	position: absolute;
 	top: 0.75rem;
 	right: 0.75rem;
-	z-index: 3;
+	z-index: 4;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -150,6 +151,68 @@
 	&:hover {
 		background: rgba(15, 23, 42, 0.9);
 	}
+}
+
+.media-viewer__nav {
+	position: absolute;
+	top: 50%;
+	z-index: 4;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(15, 23, 42, 0.72);
+	color: #fff;
+	font-size: 1.5rem;
+	cursor: pointer;
+	transform: translateY(-50%);
+	transition: background 0.15s ease;
+
+	&:hover {
+		background: rgba(15, 23, 42, 0.9);
+	}
+
+	&--prev {
+		left: 0.75rem;
+	}
+
+	&--next {
+		right: 0.75rem;
+	}
+
+	@media (max-width: 640px) {
+		width: 2.35rem;
+		height: 2.35rem;
+		font-size: 1.25rem;
+
+		&--prev {
+			left: 0.5rem;
+		}
+
+		&--next {
+			right: 0.5rem;
+		}
+	}
+}
+
+.media-viewer__counter {
+	position: absolute;
+	top: 0.85rem;
+	left: 50%;
+	z-index: 4;
+	padding: 0.35rem 0.75rem;
+	border-radius: 999px;
+	background: rgba(15, 23, 42, 0.72);
+	color: #fff;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	transform: translateX(-50%);
+	pointer-events: none;
 }
 
 .media-viewer__toolbar {
@@ -210,6 +273,21 @@
 	border-radius: 0;
 	background: transparent;
 	-webkit-overflow-scrolling: touch;
+	touch-action: pan-x pan-y;
+
+	&--pannable {
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+	}
+
+	&--panning {
+		cursor: grabbing;
+
+		.media-viewer__image {
+			pointer-events: none;
+		}
+	}
 }
 
 .media-viewer__image-wrap {
@@ -233,7 +311,11 @@
 	width: auto;
 	height: auto;
 	max-width: none;
-	transition: width 0.15s ease, height 0.15s ease;
+	will-change: width, height;
+
+	&--animated {
+		transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1), height 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+	}
 }
 
 .media-viewer__video {

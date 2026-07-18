@@ -1,6 +1,6 @@
 <template>
     <div class="home-page">
-        <HomeHero />
+        <HomeHero :tagline="contactInfo.tagline" />
 
         <section class="home-section home-section--light home-section--gradient-blue">
             <div class="container-xl">
@@ -259,8 +259,8 @@ import {
     HOMEPAGE_FAQS,
 } from '@/config/homeContent';
 import { loadCompanyContactInfo } from '@/utils/companyProfile';
-import { appName, appTagline } from '@/config/app';
-import { getSiteUrl, buildFaqPageJsonLd } from '@/utils/seo';
+import { appName } from '@/config/app';
+import { getSiteUrl, buildFaqPageJsonLd, updatePageMeta, getDefaultPageMeta } from '@/utils/seo';
 import { flushPendingScrollRestore } from '@/utils/scroll';
 
 export default {
@@ -313,6 +313,7 @@ export default {
     },
     async mounted() {
         this.contactInfo = await loadCompanyContactInfo();
+        updatePageMeta(getDefaultPageMeta(this.contactInfo.tagline));
         this.injectStructuredData();
         this.loadFeaturedProperties();
         this.loadSaleUnits();
@@ -457,7 +458,7 @@ export default {
                     {
                         '@type': 'RealEstateAgent',
                         name: appName,
-                        description: appTagline,
+                        description: this.contactInfo.tagline || appName,
                         url: getSiteUrl('/'),
                         telephone: this.contactInfo.phone,
                         email: this.contactInfo.email,

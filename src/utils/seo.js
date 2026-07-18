@@ -1,4 +1,6 @@
-import { appName, appTagline } from '@/config/app';
+import { appName } from '@/config/app';
+import { CONTACT_INFO } from '@/config/homeContent';
+import { getCachedCompanyTagline } from '@/utils/companyProfile';
 import logoUrl from '@/assets/images/mr-boss-realty-logo.png';
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://www.mrbossrealty.com').replace(/\/$/, '');
@@ -80,9 +82,12 @@ export function updatePageMeta(meta = {}) {
     setMetaTag('name', 'twitter:image', ogImage);
 }
 
-export function getDefaultPageMeta() {
+export function getDefaultPageMeta(tagline) {
+    const resolvedTagline = String(tagline || getCachedCompanyTagline() || CONTACT_INFO.tagline).trim()
+        || CONTACT_INFO.tagline;
+
     return {
-        title: `${appName} | ${appTagline}`,
+        title: `${appName} | ${resolvedTagline}`,
         description: DEFAULT_DESCRIPTION,
         path: '/',
         canonical: getSiteUrl('/'),

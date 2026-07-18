@@ -9,6 +9,7 @@ import '@tabler/icons-webfont/dist/tabler-icons.min.css';
 import '@/assets/styles/main.scss';
 import faviconUrl from '@/assets/images/favicon.png';
 import { updatePageMeta, getDefaultPageMeta } from '@/utils/seo';
+import { loadCompanyContactInfo } from '@/utils/companyProfile';
 
 const app = createApp(App);
 
@@ -24,5 +25,7 @@ faviconLink.href = faviconUrl;
 document.head.appendChild(faviconLink);
 
 updatePageMeta(getDefaultPageMeta());
+// Warm company profile cache so later getDefaultPageMeta() uses the DB tagline.
+loadCompanyContactInfo();
 console.log('VITE_API_URL =', import.meta.env.VITE_API_URL);
 app.mount('#app');
