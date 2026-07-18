@@ -42,6 +42,25 @@ function getUnitComparablePrice(unit = {}) {
     return Number(unit.unit_price) || 0;
 }
 
+/**
+ * Similar-price band by leading digit + magnitude.
+ * Example: 3,000,400 → [3,000,000, 4,000,000) i.e. 3,***,***
+ */
+function getPriceLeadingBand(price) {
+    const value = Math.floor(Math.abs(Number(price)));
+    if (!Number.isFinite(value) || value <= 0) return null;
+
+    const digits = String(value);
+    const firstDigit = Number(digits[0]);
+    if (!Number.isInteger(firstDigit) || firstDigit < 1) return null;
+
+    const magnitude = 10 ** (digits.length - 1);
+    return {
+        min: firstDigit * magnitude,
+        maxExclusive: (firstDigit + 1) * magnitude,
+    };
+}
+
 function getPriceSimilarity(candidate, current) {
     const candidatePrice = getUnitComparablePrice(candidate);
     const currentPrice = getUnitComparablePrice(current);
@@ -50,10 +69,20 @@ function getPriceSimilarity(candidate, current) {
         return { match: false, score: 0 };
     }
 
+    const band = getPriceLeadingBand(currentPrice);
+    if (!band) {
+        return { match: false, score: 0 };
+    }
+
+    const inBand = candidatePrice >= band.min && candidatePrice < band.maxExclusive;
+    if (!inBand) {
+        return { match: false, score: 0 };
+    }
+
     const priceDiff = Math.abs(candidatePrice - currentPrice) / currentPrice;
     if (priceDiff <= 0.15) return { match: true, score: 4 };
     if (priceDiff <= 0.3) return { match: true, score: 2 };
-    return { match: false, score: 0 };
+    return { match: true, score: 1 };
 }
 
 export function scoreCrossProjectSimilarity(candidate, current) {
