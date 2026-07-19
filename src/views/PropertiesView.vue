@@ -83,6 +83,7 @@
                                 placeholder="Search property..."
                                 autocomplete="off"
                                 @keydown.enter.prevent="applySearch"
+                                @input="onSearchInput"
                             />
                             <div class="site-search__actions">
                                 <button
@@ -222,7 +223,7 @@
                         <div class="property-detail__units-main">
                             <div v-if="filteredPropertyCards.length" class="property-grid">
                                 <PropertyCard
-                                    v-for="(property, index) in paginatedPropertyCards"
+                                    v-for="(property, index) in visiblePropertyCards"
                                     :key="property.cardKey"
                                     :property="property"
                                     :image-loading="index < 3 ? 'eager' : 'lazy'"
@@ -230,46 +231,22 @@
                                     :show-interest-button="true"
                                 />
                             </div>
-                            <nav
-                                v-if="totalPages > 1"
-                                class="properties-page__pagination"
-                                aria-label="Property listing pages"
+                            <div
+                                v-if="filteredPropertyCards.length"
+                                class="properties-page__load-more"
                             >
-                                <router-link
-                                    class="properties-page__pagination-link"
-                                    :class="{ 'properties-page__pagination-link--disabled': currentPage === 1 }"
-                                    :to="pageLocation(Math.max(1, currentPage - 1))"
-                                    :aria-disabled="currentPage === 1 ? 'true' : undefined"
-                                    @click.prevent="setPage(Math.max(1, currentPage - 1))"
+                                <p class="properties-page__load-more-status">
+                                    {{ visibleCountClamped }} of {{ filteredPropertyCards.length }}
+                                </p>
+                                <button
+                                    v-if="hasMoreListings"
+                                    type="button"
+                                    class="properties-page__load-more-btn"
+                                    @click="loadMoreListings"
                                 >
-                                    <i class="ti ti-chevron-left" aria-hidden="true"></i>
-                                    <span>Previous</span>
-                                </router-link>
-                                <router-link
-                                    v-for="page in visiblePageNumbers"
-                                    :key="page"
-                                    class="properties-page__pagination-link properties-page__pagination-link--number"
-                                    :class="{ 'properties-page__pagination-link--active': page === currentPage }"
-                                    :to="pageLocation(page)"
-                                    :aria-current="page === currentPage ? 'page' : undefined"
-                                    @click.prevent="setPage(page)"
-                                >
-                                    {{ page }}
-                                </router-link>
-                                <router-link
-                                    class="properties-page__pagination-link"
-                                    :class="{ 'properties-page__pagination-link--disabled': currentPage === totalPages }"
-                                    :to="pageLocation(Math.min(totalPages, currentPage + 1))"
-                                    :aria-disabled="currentPage === totalPages ? 'true' : undefined"
-                                    @click.prevent="setPage(Math.min(totalPages, currentPage + 1))"
-                                >
-                                    <span>Next</span>
-                                    <i class="ti ti-chevron-right" aria-hidden="true"></i>
-                                </router-link>
-                                <span class="properties-page__pagination-status">
-                                    {{ paginationRangeTo }} of {{ filteredPropertyCards.length }}
-                                </span>
-                            </nav>
+                                    Load more
+                                </button>
+                            </div>
                             <p v-else class="property-detail__filters-empty">
                                 No properties match your search or filters.
                                 <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
@@ -296,7 +273,7 @@ import { mapUnitToPropertyCard } from '@/utils/mapUnitToProperty';
 import { mapPublicUnitToPropertyCard } from '@/utils/mapUnitToProperty';
 import { mapWholeBuildingToPropertyCard } from '@/utils/mapWholeBuildingToProperty';
 import { mapPublicWholeBuildingToPropertyCard } from '@/utils/mapWholeBuildingToProperty';
-import { unitMatchesSearch } from '@/utils/unitSearch';
+import { buildingMatchesSearch, unitMatchesSearch } from '@/utils/unitSearch';
 import { flushPendingScrollRestore } from '@/utils/scroll';
 import heroImageUrl from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 
@@ -316,8 +293,9 @@ export default {
             searchQuery: '',
             searchDraft: '',
             recordsPerPage: DEFAULT_PROPERTY_PAGE_SIZE,
-            currentPage: 1,
+            visibleCount: DEFAULT_PROPERTY_PAGE_SIZE,
             syncingRouteFilters: false,
+            _searchTimer: null,
             heroImageUrl,
         };
     },
@@ -536,7 +514,7 @@ export default {
                     .filter((building) => (
                         this.matchesBedroomFilter(building)
                         && this.matchesBathroomFilter(building)
-                        && this.matchesWholeBuildingSearch(building, query)
+                        && buildingMatchesSearch(building, query, property)
                     ))
                     .map((building) => ({
                         ...mapWholeBuildingToPropertyCard(building, property, cardOptions),
@@ -571,25 +549,16 @@ export default {
         filteredPropertyCards() {
             return [...this.filteredPrivateListingCards, ...this.filteredUnitCards];
         },
-        totalPages() {
-            return Math.max(1, Math.ceil(this.filteredPropertyCards.length / this.recordsPerPage));
-        },
-        paginatedPropertyCards() {
-            const start = (this.currentPage - 1) * this.recordsPerPage;
-            return this.filteredPropertyCards.slice(start, start + this.recordsPerPage);
-        },
-        paginationRangeTo() {
+        visibleCountClamped() {
             const total = this.filteredPropertyCards.length;
             if (!total) return 0;
-            return Math.min(this.currentPage * this.recordsPerPage, total);
+            return Math.min(this.visibleCount || this.recordsPerPage, total);
         },
-        visiblePageNumbers() {
-            const maxVisible = 7;
-            const half = Math.floor(maxVisible / 2);
-            let start = Math.max(1, this.currentPage - half);
-            const end = Math.min(this.totalPages, start + maxVisible - 1);
-            start = Math.max(1, end - maxVisible + 1);
-            return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+        visiblePropertyCards() {
+            return this.filteredPropertyCards.slice(0, this.visibleCountClamped);
+        },
+        hasMoreListings() {
+            return this.visibleCountClamped < this.filteredPropertyCards.length;
         },
         filteredUnits() {
             const query = this.searchQuery.trim();
@@ -639,7 +608,8 @@ export default {
         '$route.fullPath'() {
             if (!this.loading) {
                 this.applyRouteCityFilter();
-                this.syncPageFromRoute();
+                this.resetVisibleListings();
+                this.clearLegacyPageQuery();
                 this.updateCityPageMeta();
             }
         },
@@ -651,14 +621,18 @@ export default {
         availableBedrooms: 'syncAllBedroomsIndeterminate',
         selectedBathrooms: 'onListingFiltersChanged',
         availableBathrooms: 'syncAllBathroomsIndeterminate',
-        totalPages(total) {
-            if (this.currentPage > total) {
-                this.setPage(total, { replace: true, scroll: false });
-            }
+        recordsPerPage(size) {
+            this.visibleCount = size;
         },
     },
     mounted() {
         this.loadProperties();
+    },
+    beforeUnmount() {
+        if (this._searchTimer) {
+            window.clearTimeout(this._searchTimer);
+            this._searchTimer = null;
+        }
     },
     activated() {
         flushPendingScrollRestore();
@@ -696,10 +670,7 @@ export default {
             }
         },
         updateCityPageMeta() {
-            const pageSuffix = this.currentPage > 1 ? ` – Page ${this.currentPage}` : '';
-            const canonical = this.currentPage > 1
-                ? `${getSiteUrl(this.$route.path)}?page=${this.currentPage}`
-                : getSiteUrl(this.$route.path);
+            const canonical = getSiteUrl(this.$route.path);
 
             if (this.isCityBrowsePage && !this.routeCityName) {
                 updatePageMeta({
@@ -713,8 +684,8 @@ export default {
 
             if (!this.isCityBrowsePage) {
                 updatePageMeta({
-                    title: `Properties for Sale and Rent${pageSuffix} | Mr. Boss Realty`,
-                    description: `Explore condominiums and residential developments across the Philippines with Mr. Boss Realty${pageSuffix}.`,
+                    title: 'Properties for Sale and Rent | Mr. Boss Realty',
+                    description: 'Explore condominiums and residential developments across the Philippines with Mr. Boss Realty.',
                     canonical,
                 });
                 return;
@@ -722,38 +693,26 @@ export default {
 
             const city = this.routeCityName;
             updatePageMeta({
-                title: `Properties in ${city}${pageSuffix} | Mr. Boss Realty`,
-                description: `Browse condominiums, houses, and rental properties in ${city} with Mr. Boss Realty${pageSuffix}.`,
+                title: `Properties in ${city} | Mr. Boss Realty`,
+                description: `Browse condominiums, houses, and rental properties in ${city} with Mr. Boss Realty.`,
                 canonical,
             });
         },
-        syncPageFromRoute() {
-            const requested = Number.parseInt(this.$route.query.page, 10);
-            this.currentPage = Number.isInteger(requested) && requested > 0
-                ? Math.min(requested, this.totalPages)
-                : 1;
-        },
-        pageLocation(page) {
+        clearLegacyPageQuery() {
+            if (!this.$route.query.page) return;
             const query = { ...this.$route.query };
-            if (page > 1) {
-                query.page = String(page);
-            } else {
-                delete query.page;
-            }
-            return { path: this.$route.path, query };
+            delete query.page;
+            this.$router.replace({ path: this.$route.path, query }).catch(() => {});
         },
-        setPage(page, { replace = false, scroll = true } = {}) {
-            const nextPage = Math.min(Math.max(1, page), this.totalPages);
-            const location = this.pageLocation(nextPage);
-            const navigation = replace ? this.$router.replace(location) : this.$router.push(location);
-            if (scroll) {
-                navigation.then(() => this.scrollToListings()).catch(() => {});
-            }
+        resetVisibleListings() {
+            this.visibleCount = this.recordsPerPage;
         },
-        resetPage() {
-            if (this.currentPage !== 1 || this.$route.query.page) {
-                this.setPage(1, { replace: true, scroll: false });
-            }
+        loadMoreListings() {
+            if (!this.hasMoreListings) return;
+            this.visibleCount = Math.min(
+                this.visibleCountClamped + this.recordsPerPage,
+                this.filteredPropertyCards.length,
+            );
         },
         scrollToListings() {
             this.$nextTick(() => {
@@ -766,7 +725,7 @@ export default {
             this.syncAllBedroomsIndeterminate();
             this.syncAllBathroomsIndeterminate();
             if (!this.syncingRouteFilters) {
-                this.resetPage();
+                this.resetVisibleListings();
             }
         },
         countPropertyListings(property) {
@@ -805,15 +764,7 @@ export default {
             return this.matchesCityValue(this.getUnitCity(unit));
         },
         matchesWholeBuildingSearch(building, query) {
-            if (!query) return true;
-
-            const haystack = [
-                building.building_name,
-                building.building_type,
-                building.listing_type,
-            ].filter(Boolean).join(' ').toLowerCase();
-
-            return haystack.includes(query.toLowerCase());
+            return buildingMatchesSearch(building, query);
         },
         matchesUnitTypeFilter(unit) {
             if (unit.listing_kind === 'whole_building') return true;
@@ -852,14 +803,31 @@ export default {
             return unitMatchesSearch(unit, query);
         },
         applySearch() {
+            if (this._searchTimer) {
+                window.clearTimeout(this._searchTimer);
+                this._searchTimer = null;
+            }
             this.searchQuery = this.searchDraft.trim();
-            this.resetPage();
+            this.resetVisibleListings();
             this.$refs.searchInput?.focus();
         },
+        onSearchInput() {
+            if (this._searchTimer) {
+                window.clearTimeout(this._searchTimer);
+            }
+            this._searchTimer = window.setTimeout(() => {
+                this.searchQuery = this.searchDraft.trim();
+                this.resetVisibleListings();
+            }, 200);
+        },
         clearSearch() {
+            if (this._searchTimer) {
+                window.clearTimeout(this._searchTimer);
+                this._searchTimer = null;
+            }
             this.searchDraft = '';
             this.searchQuery = '';
-            this.resetPage();
+            this.resetVisibleListings();
             this.$nextTick(() => {
                 this.$refs.searchInput?.focus();
             });
@@ -919,7 +887,7 @@ export default {
             this.selectedBathrooms = [];
             this.searchDraft = '';
             this.searchQuery = '';
-            this.resetPage();
+            this.resetVisibleListings();
         },
         async loadProperties() {
             this.loading = true;
@@ -940,6 +908,7 @@ export default {
                     loadWebsiteSettings(),
                 ]);
                 this.recordsPerPage = websiteSettings.property_page_records_per_page;
+                this.visibleCount = this.recordsPerPage;
 
                 const privateProjects = (projectsRes.data || []).filter(
                     (project) => project.is_private_on_website && project.city,
@@ -965,7 +934,7 @@ export default {
                 this.loading = false;
                 this.$nextTick(() => {
                     this.applyRouteCityFilter();
-                    this.syncPageFromRoute();
+                    this.clearLegacyPageQuery();
                     this.updateCityPageMeta();
                     flushPendingScrollRestore();
                 });

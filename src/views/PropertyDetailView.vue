@@ -305,7 +305,7 @@ import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
 import { getWebsiteDeveloperDisplay } from '@/utils/developerDisplay';
 import { mapUnitToPropertyCard } from '@/utils/mapUnitToProperty';
 import { mapWholeBuildingToPropertyCard } from '@/utils/mapWholeBuildingToProperty';
-import { unitMatchesSearch } from '@/utils/unitSearch';
+import { buildingMatchesSearch, unitMatchesSearch } from '@/utils/unitSearch';
 import { updatePageMeta, getSiteUrl } from '@/utils/seo';
 import { getPropertyDetailPath, getPropertyDetailRoute, getPropertiesByCityRoute } from '@/utils/propertyRoutes';
 import { scrollToPageTopAfterRender } from '@/utils/scroll';
@@ -658,15 +658,7 @@ export default {
             return this.selectedListingTypes.includes(building.listing_type);
         },
         matchesWholeBuildingSearch(building, query) {
-            if (!query) return true;
-
-            const haystack = [
-                building.building_name,
-                building.building_type,
-                building.listing_type,
-            ].filter(Boolean).join(' ').toLowerCase();
-
-            return haystack.includes(query.toLowerCase());
+            return buildingMatchesSearch(building, query, this.property);
         },
         listingTypeLabel(value) {
             if (value === 'rent') return 'For Rent';
