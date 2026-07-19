@@ -3,6 +3,16 @@ export const SITE_CHAT_MESSAGE_EVENT = 'mrboss:chat-message';
 export const SITE_CHAT_CONVERSATION_EVENT = 'mrboss:chat-conversation';
 export const SITE_CHAT_STORAGE_KEY = 'mrboss-website-hero-chat';
 
+function isStoredChatIdleExpired(saved) {
+    const hours = Number(saved?.chatIdleTtlHours);
+    if (!Number.isInteger(hours) || hours < 1) return false;
+
+    const last = Number(saved?.lastActivityAt);
+    if (!Number.isFinite(last) || last <= 0) return false;
+
+    return Date.now() - last >= hours * 60 * 60 * 1000;
+}
+
 export function buildUnitInterestMessage(unitSlug) {
     const slug = String(unitSlug || '').trim();
     if (!slug) return '';
@@ -50,6 +60,10 @@ export function hasStoredSiteChatConversation() {
         const raw = sessionStorage.getItem(SITE_CHAT_STORAGE_KEY);
         if (!raw) return false;
         const saved = JSON.parse(raw);
+        if (isStoredChatIdleExpired(saved)) {
+            sessionStorage.removeItem(SITE_CHAT_STORAGE_KEY);
+            return false;
+        }
         return Array.isArray(saved?.messages) && saved.messages.length > 0;
     } catch {
         return false;

@@ -255,6 +255,10 @@
 
 		.hero-interaction__search-btn {
 			color: var(--app-primary);
+
+			&--muted {
+				color: #64748b;
+			}
 		}
 	}
 
@@ -264,9 +268,33 @@
 	}
 }
 
+.hero-interaction__search-actions {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 0.15rem;
+	padding-right: 0.125rem;
+}
+
 .hero-interaction__search-btn {
 	@include search.site-search-button;
 	color: var(--app-primary);
+
+	&:hover,
+	&:focus {
+		color: var(--app-primary);
+		background: rgba(6, 111, 209, 0.08);
+	}
+
+	&--muted {
+		color: #64748b;
+
+		&:hover,
+		&:focus {
+			color: #64748b;
+			background: rgba(100, 116, 139, 0.1);
+		}
+	}
 }
 
 .hero-interaction__input {

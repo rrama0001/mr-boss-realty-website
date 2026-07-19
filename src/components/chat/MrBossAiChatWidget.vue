@@ -115,17 +115,17 @@
                                         class="hero-chat__verification"
                                     >
                                         <label class="hero-chat__verification-label" :for="`verification-contact-${index}`">
-                                            Mobile number
+                                            Mobile number or email
                                         </label>
                                         <div class="hero-chat__verification-form">
                                             <input
                                                 :id="`verification-contact-${index}`"
                                                 v-model="verificationContact"
-                                                type="tel"
-                                                inputmode="tel"
-                                                autocomplete="tel"
+                                                type="text"
+                                                inputmode="text"
+                                                autocomplete="email"
                                                 class="form-control form-control-sm hero-chat__verification-input"
-                                                placeholder="09171234567"
+                                                placeholder="09171234567 or name@email.com"
                                                 :disabled="thinking"
                                                 @keydown.enter.prevent="onVerificationContact(index)"
                                             />
@@ -135,7 +135,7 @@
                                                 :disabled="thinking || !verificationContact.trim()"
                                                 @click="onVerificationContact(index)"
                                             >
-                                                Send SMS OTP
+                                                Send OTP
                                             </button>
                                         </div>
                                     </div>
@@ -150,7 +150,7 @@
                                             <p class="hero-chat__verification-dev-label">Development OTP</p>
                                             <p class="hero-chat__verification-dev-code">{{ getVerificationDevOtp(index) }}</p>
                                             <p class="hero-chat__verification-dev-note">
-                                                SMS is not configured on the server. Use this code to continue testing locally.
+                                                OTP delivery is not configured on the server. Use this code to continue testing locally.
                                             </p>
                                         </div>
                                         <label class="hero-chat__verification-label" :for="`verification-otp-${index}`">
@@ -307,6 +307,7 @@ import {
     isAiGuideNudgeDismissed,
 } from '@/utils/aiGuideNudge';
 import { AI_GUIDE_NUDGE } from '@/config/homeContent';
+import { isChatIdleExpired, loadWebsiteSettings } from '@/utils/websiteSettings';
 
 const AI_REPLY_ERROR = 'Failed to generate reply. Please try again.';
 const DOCK_FLIP_MS = 620;
@@ -332,11 +333,14 @@ export default {
             draft: '',
             messages: [],
             chatSessionId: `website-${Date.now()}`,
+            lastActivityAt: Date.now(),
+            chatIdleTtlHours: null,
             verificationContact: '',
             verificationOtp: '',
             verificationError: '',
             otpVerificationEnabled: false,
             _restoringChatState: false,
+            _idleChatTimer: null,
             guideModalOpen: false,
             guideNudgeVisible: false,
             guideNudgeDismissed: isAiGuideNudgeDismissed(),
@@ -411,11 +415,6 @@ export default {
     },
     mounted() {
         this.updateViewportMode();
-        if (!this.restoreChatState()) {
-            this.activateDefaultMinimizedWidget();
-        } else {
-            this.normalizeWidgetChatState();
-        }
         this._viewportMq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
         this._onViewportChange = () => this.updateViewportMode();
         this._viewportMq.addEventListener('change', this._onViewportChange);
@@ -426,11 +425,7 @@ export default {
         window.addEventListener(SITE_CHAT_INTEREST_EVENT, this._onSiteChatInterest);
         window.addEventListener(SITE_CHAT_MESSAGE_EVENT, this._onSiteChatMessage);
         this.bindOrbResizeHandler();
-        this.$nextTick(() => {
-            this.settleFunctionalOrb();
-            dispatchSiteChatConversationChange(this.hasConversation);
-        });
-        this.scheduleGuideNudge();
+        this.bootstrapChatState();
     },
     watch: {
         hasConversation(hasMessages) {
@@ -465,6 +460,7 @@ export default {
     },
     beforeUnmount() {
         this.clearGuideNudgeTimer();
+        this.clearIdleChatTimer();
         this.clearReplyTimers();
         this.unbindOrbResizeHandler();
         this._viewportMq?.removeEventListener('change', this._onViewportChange);
@@ -474,6 +470,82 @@ export default {
         this.persistChatState();
     },
     methods: {
+        async bootstrapChatState() {
+            try {
+                const settings = await loadWebsiteSettings();
+                this.chatIdleTtlHours = settings.chat_idle_ttl_hours;
+            } catch (err) {
+                console.warn('Could not load chat idle settings:', err);
+                this.chatIdleTtlHours = null;
+            }
+
+            if (!this.restoreChatState()) {
+                this.activateDefaultMinimizedWidget();
+            } else {
+                this.normalizeWidgetChatState();
+            }
+
+            this.$nextTick(() => {
+                this.settleFunctionalOrb();
+                dispatchSiteChatConversationChange(this.hasConversation);
+            });
+            this.scheduleGuideNudge();
+            this.scheduleIdleChatCheck();
+        },
+
+        touchChatActivity() {
+            this.lastActivityAt = Date.now();
+            this.persistChatState();
+        },
+
+        isStoredChatIdle(lastActivityAt) {
+            return isChatIdleExpired(lastActivityAt, this.chatIdleTtlHours);
+        },
+
+        scheduleIdleChatCheck() {
+            this.clearIdleChatTimer();
+            if (!this.chatIdleTtlHours) return;
+
+            this._idleChatTimer = window.setInterval(() => {
+                this.purgeIdleChatIfNeeded();
+            }, 60 * 1000);
+        },
+
+        clearIdleChatTimer() {
+            if (this._idleChatTimer) {
+                window.clearInterval(this._idleChatTimer);
+                this._idleChatTimer = null;
+            }
+        },
+
+        purgeIdleChatIfNeeded() {
+            if (!this.hasConversation) return;
+            if (!this.isStoredChatIdle(this.lastActivityAt)) return;
+            this.resetConversationAfterIdle();
+        },
+
+        resetConversationAfterIdle() {
+            this.messages = [];
+            this.draft = '';
+            this.verificationContact = '';
+            this.verificationOtp = '';
+            this.verificationError = '';
+            this.chatSessionId = `website-${Date.now()}`;
+            this.lastActivityAt = Date.now();
+
+            if (!this.isMinimized) {
+                this.clearFlipPin(this.$refs.heroInteraction);
+                this.clearOrbPin(this.getFunctionalOrbEl());
+                this.chatMode = 'minimized';
+                this.dockPhase = null;
+                this.isDockAnimating = false;
+            }
+
+            this.persistChatState();
+            this.scheduleGuideNudge();
+            dispatchSiteChatConversationChange(false);
+        },
+
         renderMessageContent(content) {
             return renderMarkdown(content);
         },
@@ -552,6 +624,8 @@ export default {
                     widgetActive: true,
                     assistantActive: true,
                     chatSessionId: this.chatSessionId,
+                    lastActivityAt: this.lastActivityAt || Date.now(),
+                    chatIdleTtlHours: this.chatIdleTtlHours,
                     messages: this.messages,
                     chatMode: this.chatMode === 'normal' ? 'minimized' : this.chatMode,
                     dockedModeAnchorRect: this.dockedModeAnchorRect,
@@ -566,6 +640,16 @@ export default {
 
                 const saved = JSON.parse(raw);
                 const hasMessages = Array.isArray(saved?.messages) && saved.messages.length > 0;
+                const lastActivityAt = Number(saved?.lastActivityAt) || 0;
+
+                if (hasMessages && this.isStoredChatIdle(lastActivityAt)) {
+                    sessionStorage.removeItem(CHAT_STORAGE_KEY);
+                    this.chatSessionId = `website-${Date.now()}`;
+                    this.lastActivityAt = Date.now();
+                    this.messages = [];
+                    return false;
+                }
+
                 const shouldRestore =
                     saved?.widgetActive === true ||
                     saved?.assistantActive === true ||
@@ -575,6 +659,7 @@ export default {
 
                 this._restoringChatState = true;
                 this.chatSessionId = saved.chatSessionId || `website-${Date.now()}`;
+                this.lastActivityAt = lastActivityAt || Date.now();
                 this.dockedModeAnchorRect = saved.dockedModeAnchorRect || null;
                 this.assistantActive = true;
                 this.chatMode = 'minimized';
@@ -680,7 +765,11 @@ export default {
 
             this.messages = [];
             this.draft = '';
+            this.verificationContact = '';
+            this.verificationOtp = '';
+            this.verificationError = '';
             this.chatSessionId = `website-${Date.now()}`;
+            this.lastActivityAt = Date.now();
 
             if (!this.isMinimized) {
                 this.clearFlipPin(this.$refs.heroInteraction);
@@ -759,6 +848,7 @@ export default {
                 content: data.reply,
                 verification: this.normalizeAssistantVerification(data),
             });
+            this.touchChatActivity();
         },
 
         messageHasActiveVerification(verification) {
@@ -787,12 +877,15 @@ export default {
                 };
             }
 
-            if (reply.includes('free AI chat limit') && /\bAgree\b/i.test(reply)) {
+            if (
+                reply.includes('To make sure you are a real person')
+                || (reply.includes('free AI chat limit') && /\bAgree\b/i.test(reply))
+            ) {
                 return {
-                    status: 'consent_pending',
+                    status: 'contact_pending',
                     topic: 'chat_quota',
-                    showConsentActions: true,
-                    showContactForm: false,
+                    showConsentActions: false,
+                    showContactForm: true,
                     showOtpForm: false,
                 };
             }
@@ -800,6 +893,8 @@ export default {
             if (
                 reply.includes('Please provide your mobile number so we can send you a one-time password')
                 || reply.includes('Please provide your email address so we can send you a one-time password')
+                || reply.includes('Please provide your mobile number or email so we can send you a one-time password')
+                || reply.includes('Please enter your mobile number or email in the field below')
             ) {
                 return {
                     status: 'contact_pending',
@@ -814,6 +909,7 @@ export default {
                 || reply.includes('development code shown below')
                 || reply.includes('OTP could not be texted')
                 || reply.includes('OTP could not be emailed')
+                || reply.includes('OTP delivery is not configured')
             ) {
                 return {
                     status: 'otp_pending',
@@ -1075,6 +1171,7 @@ export default {
             if (!text || this.thinking) return;
 
             this.registerAiGuideActivity();
+            this.touchChatActivity();
 
             const wasMinimized = this.isMinimized;
             const isEnteringChat = !this.assistantActive;
@@ -1122,6 +1219,7 @@ export default {
             }
 
             this.messages.push({ role: 'user', content: text });
+            this.touchChatActivity();
             this.draft = '';
             this.scrollChatToBottom();
             this.$nextTick(this.resizeChatInput);

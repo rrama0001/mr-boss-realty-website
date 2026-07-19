@@ -35,14 +35,25 @@
                         placeholder="Ask about properties, locations, or units..."
                         aria-label="Ask Mr. Boss AI"
                     />
-                    <button
-                        type="submit"
-                        class="hero-interaction__search-btn"
-                        :disabled="!draft.trim()"
-                        aria-label="Search"
-                    >
-                        <i class="ti ti-search" aria-hidden="true"></i>
-                    </button>
+                    <div class="hero-interaction__search-actions">
+                        <button
+                            v-if="draft"
+                            type="button"
+                            class="hero-interaction__search-btn hero-interaction__search-btn--muted"
+                            aria-label="Clear search"
+                            @click="clearSearch"
+                        >
+                            <i class="ti ti-x" aria-hidden="true"></i>
+                        </button>
+                        <button
+                            type="submit"
+                            class="hero-interaction__search-btn"
+                            :disabled="!draft.trim()"
+                            aria-label="Search"
+                        >
+                            <i class="ti ti-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -90,6 +101,10 @@ export default {
         window.removeEventListener(SITE_CHAT_CONVERSATION_EVENT, this._onConversationChange);
     },
     methods: {
+        clearSearch() {
+            this.draft = '';
+            this.$refs.heroSearchInput?.focus();
+        },
         onSearchSubmit() {
             const text = this.draft.trim();
             if (!text) return;

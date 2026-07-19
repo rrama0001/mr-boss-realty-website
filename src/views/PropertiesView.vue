@@ -266,6 +266,9 @@
                                     <span>Next</span>
                                     <i class="ti ti-chevron-right" aria-hidden="true"></i>
                                 </router-link>
+                                <span class="properties-page__pagination-status">
+                                    {{ paginationRangeTo }} of {{ filteredPropertyCards.length }}
+                                </span>
                             </nav>
                             <p v-else class="property-detail__filters-empty">
                                 No properties match your search or filters.
@@ -574,6 +577,11 @@ export default {
         paginatedPropertyCards() {
             const start = (this.currentPage - 1) * this.recordsPerPage;
             return this.filteredPropertyCards.slice(start, start + this.recordsPerPage);
+        },
+        paginationRangeTo() {
+            const total = this.filteredPropertyCards.length;
+            if (!total) return 0;
+            return Math.min(this.currentPage * this.recordsPerPage, total);
         },
         visiblePageNumbers() {
             const maxVisible = 7;

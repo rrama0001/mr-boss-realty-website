@@ -62,9 +62,12 @@
 	font-weight: 600;
 	text-decoration: none;
 
-	&:hover {
+	&:hover,
+	&:focus,
+	&:focus-visible {
 		border-color: var(--app-primary);
 		color: var(--app-primary);
+		text-decoration: none;
 	}
 
 	&--number {
@@ -77,8 +80,11 @@
 		background: var(--app-primary);
 		color: #fff;
 
-		&:hover {
+		&:hover,
+		&:focus,
+		&:focus-visible {
 			color: #fff;
+			text-decoration: none;
 		}
 	}
 
@@ -86,6 +92,15 @@
 		pointer-events: none;
 		opacity: 0.45;
 	}
+}
+
+.properties-page__pagination-status {
+	margin-left: 0.25rem;
+	padding-inline: 0.35rem;
+	color: #64748b;
+	font-size: 0.875rem;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 @keyframes properties-spin {
