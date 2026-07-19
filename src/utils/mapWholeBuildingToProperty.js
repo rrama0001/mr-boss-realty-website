@@ -60,6 +60,7 @@ function listingProjectFromCard(building, project = {}) {
     return {
         project_name: project.project_name || building.project_name,
         city: project.city || building.project_city,
+        slug: project.slug || building.project_slug,
         is_private_on_website: Boolean(project.is_private_on_website ?? building.is_private_on_website),
     };
 }
@@ -134,6 +135,7 @@ export function mapWholeBuildingToPropertyCard(building, project = {}, options =
         detailTo: options.linkToProject
             ? getPropertyDetailRoute(listingProjectFromCard(building, project))
             : getBuildingDetailRoute(building, project),
+        propertyTo: getPropertyDetailRoute(listingProjectFromCard(building, project)),
         listingRef: building.slug || '',
         propertySlug: projectSlug || '',
         interestMessage: buildBuildingInterestMessage(building.building_name, projectSlug),

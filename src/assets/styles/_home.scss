@@ -775,6 +775,17 @@
 	color: var(--app-primary);
 }
 
+.property-card__property-name-link {
+	color: inherit;
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		text-decoration: underline;
+		text-underline-offset: 0.15em;
+	}
+}
+
 .property-card__location {
 	margin: 0 0 0.625rem;
 	font-size: 0.875rem;

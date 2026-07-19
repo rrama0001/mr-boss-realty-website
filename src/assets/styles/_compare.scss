@@ -241,6 +241,20 @@
 		&:has(.listing-compare-panel__spec-label[role='button']:hover):not(.is-highlighted) {
 			background: rgba(6, 111, 209, 0.05);
 		}
+
+		&--full {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0.2rem;
+
+			.listing-compare-panel__spec-value {
+				width: 100%;
+				max-width: 100%;
+				overflow-wrap: anywhere;
+				word-break: break-word;
+				white-space: normal;
+				line-height: 1.45;
+			}
+		}
 	}
 
 	.listing-compare-panel__spec-label,

@@ -57,7 +57,10 @@
                                 v-for="item in specItems"
                                 :key="item.key"
                                 class="listing-compare-panel__spec-row"
-                                :class="{ 'is-highlighted': highlightedSpecKey === item.key }"
+                                :class="{
+                                    'is-highlighted': highlightedSpecKey === item.key,
+                                    'listing-compare-panel__spec-row--full': item.fullWidth,
+                                }"
                                 role="listitem"
                             >
                                 <span

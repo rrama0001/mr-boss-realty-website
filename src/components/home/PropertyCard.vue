@@ -24,7 +24,16 @@
                     <h3 class="property-card__title">{{ displayTitle }}</h3>
                     <PropertyCardMenu v-if="showMenu" :property="property" />
                 </div>
-                <p v-if="displayPropertyName" class="property-card__property-name">{{ displayPropertyName }}</p>
+                <p v-if="displayPropertyName" class="property-card__property-name">
+                    <router-link
+                        v-if="propertyLinkTo"
+                        :to="propertyLinkTo"
+                        class="property-card__property-name-link"
+                    >
+                        {{ displayPropertyName }}
+                    </router-link>
+                    <template v-else>{{ displayPropertyName }}</template>
+                </p>
                 <p class="property-card__location">
                     <LocationWithCity
                         v-if="property.city"
@@ -132,6 +141,17 @@ export default {
                 is_private_on_website: this.property.is_private_on_website,
                 project_name: this.property.propertyName,
             });
+        },
+        propertyLinkTo() {
+            const target = this.property.propertyTo;
+            if (!target) return null;
+            if (typeof target === 'string') {
+                return target.trim() || null;
+            }
+            if (target.name === 'properties') {
+                return null;
+            }
+            return target;
         },
         displayInterestButton() {
             if (!this.showInterestButton) return false;

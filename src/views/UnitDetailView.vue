@@ -100,8 +100,8 @@
                                 <PropertyCardMenu :property="listingMenuProperty" />
                                 <dl class="unit-detail__spec-list">
                                     <template v-for="item in specItems" :key="item.key">
-                                        <dt>{{ item.label }}</dt>
-                                        <dd>
+                                        <dt :class="{ 'unit-detail__spec-full': item.fullWidth }">{{ item.label }}</dt>
+                                        <dd :class="{ 'unit-detail__spec-full': item.fullWidth }">
                                             <a
                                                 v-if="item.href"
                                                 :href="item.href"
@@ -490,6 +490,12 @@ export default {
                     key: 'smoking',
                     label: 'Smoking Allowed',
                     value: formatYesNo(this.unit.is_allowed_smoking),
+                },
+                {
+                    key: 'amenities',
+                    label: 'Amenities',
+                    value: this.unit.amenities,
+                    fullWidth: true,
                 },
             ];
 

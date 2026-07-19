@@ -28,6 +28,7 @@ function listingProjectFromCard(unit, project = {}) {
     return {
         project_name: project.project_name || unit.project_name,
         city: project.city || unit.project_city,
+        slug: project.slug || unit.project_slug,
         is_private_on_website: Boolean(project.is_private_on_website ?? unit.is_private_on_website),
     };
 }
@@ -101,6 +102,7 @@ export function mapUnitToPropertyCard(unit, project = {}, options = {}) {
         detailTo: options.linkToProject
             ? getPropertyDetailRoute(listingProjectFromCard(unit, project))
             : getUnitDetailRoute({ ...unit, slug: resolveUnitListingRef(unit) }, project),
+        propertyTo: getPropertyDetailRoute(listingProjectFromCard(unit, project)),
         listingRef: resolveUnitListingRef(unit),
         unitSlug: resolveUnitListingRef(unit),
     };

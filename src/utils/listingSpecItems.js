@@ -124,11 +124,6 @@ export function buildUnitSpecItems(unit = {}) {
             value: unit.building_type,
         },
         {
-            key: 'amenities',
-            label: 'Amenities',
-            value: unit.amenities,
-        },
-        {
             key: 'pet-allowed',
             label: 'Pets Allowed',
             value: formatYesNo(unit.is_pet_allowed),
@@ -137,6 +132,12 @@ export function buildUnitSpecItems(unit = {}) {
             key: 'smoking',
             label: 'Smoking Allowed',
             value: formatYesNo(unit.is_allowed_smoking),
+        },
+        {
+            key: 'amenities',
+            label: 'Amenities',
+            value: unit.amenities,
+            fullWidth: true,
         },
     ];
 
@@ -173,11 +174,6 @@ export function buildBuildingSpecItems(building = {}) {
             value: building.building_name,
         },
         {
-            key: 'amenities',
-            label: 'Amenities',
-            value: building.amenities,
-        },
-        {
             key: 'pet-allowed',
             label: 'Pets Allowed',
             value: formatYesNo(building.is_pet_allowed),
@@ -186,6 +182,12 @@ export function buildBuildingSpecItems(building = {}) {
             key: 'smoking',
             label: 'Smoking Allowed',
             value: formatYesNo(building.is_allowed_smoking),
+        },
+        {
+            key: 'amenities',
+            label: 'Amenities',
+            value: building.amenities,
+            fullWidth: true,
         },
     ];
 
