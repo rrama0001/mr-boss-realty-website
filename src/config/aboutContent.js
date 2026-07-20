@@ -16,15 +16,15 @@ export const ABOUT_PAGE = {
             id: 'about',
             title: 'About Mr. Boss Realty',
             content: `
-                <p>At Mr. Boss Realty, we are bridging the gap between deep-rooted market expertise and the next generation of digital innovation. Founded in 2021 by broker Mike Dalmacio, our firm was built on a legacy of trust and local market knowledge. Today, we are transforming that foundation into a high-performance, technology-driven experience that offers the smarter way to find your next property. Anywhere, anytime.</p>
+                <p>At <strong>Mr. Boss Realty</strong>, we are bridging the gap between deep-rooted market expertise and the next generation of digital innovation. Founded in 2021 by broker <strong>Mike Dalmacio</strong>, our firm was built on a legacy of trust and local market knowledge. Today, we are transforming that foundation into a high-performance, technology-driven experience that offers the smarter way to find your next property. Anywhere, anytime.</p>
             `,
         },
         {
             id: 'evolution',
             title: 'Our Evolution',
             content: `
-                <p>The vision for a modern, AI-powered brokerage began one year ago. Inspired by the forward-thinking insights of Mr. A, who first introduced the transformative potential of artificial intelligence in our field, we set out to redefine the standard of service.</p>
-                <p>Gerard Dawkins, our Marketing Strategist, spearheaded this shift. By moving us away from traditional sales models to a strategy centered on precision-driven AI solutions and compelling visual storytelling, Gerard has redefined how we present the property market. This technological evolution was solidified by the addition of Rei Yurama, whose expertise in software development and information systems powers our custom digital platforms, making the property market more accessible and efficient than ever before.</p>
+                <p>The vision for a modern, AI-powered brokerage began one year ago. Inspired by the forward-thinking insights of <strong>Mr. A</strong>, who first introduced the transformative potential of artificial intelligence in our field, we set out to redefine the standard of service.</p>
+                <p><strong>Gerard Dawkins</strong>, our Marketing Strategist, spearheaded this shift. By moving us away from traditional sales models to a strategy centered on precision-driven AI solutions and compelling visual storytelling, Gerard has redefined how we present the property market. This technological evolution was solidified by the addition of <strong>Rei Yurama</strong>, whose expertise in software development and information systems powers our custom digital platforms, making the property market more accessible and efficient than ever before.</p>
             `,
         },
         {
@@ -44,13 +44,13 @@ export const ABOUT_PAGE = {
             title: 'Our Promise',
             content: `
                 <p>Mr. Boss Realty is not just keeping up with the market—we are setting the pace. We are committed to providing a smarter, faster, and more transparent real estate experience, backed by the human touch that makes a house feel like home.</p>
-                <p>Welcome to Mr. Boss Realty.</p>
+                <p>Welcome to <strong>Mr. Boss Realty</strong>.</p>
             `,
         },
     ],
 
     valuesTitle: 'What We Stand For',
-    valuesLead: `At Mr. Boss Realty, our values define who we are and how we serve every client. We believe that real estate is more than buying or selling properties—it's about helping people make one of the most important decisions of their lives with confidence and peace of mind.`,
+    valuesLead: `<strong>At Mr. Boss Realty</strong>, our values define who we are and how we serve every client. We believe that real estate is more than buying or selling properties—it's about helping people make one of the most important decisions of their lives with confidence and peace of mind.`,
     values: [
         {
             icon: 'ti ti-heart-handshake',

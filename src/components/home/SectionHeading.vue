@@ -1,7 +1,7 @@
 <template>
     <div class="section-heading" :class="{ 'section-heading--center': center }">
         <h2 class="section-heading__title">{{ title }}</h2>
-        <p v-if="subtitle" class="section-heading__subtitle">{{ subtitle }}</p>
+        <p v-if="subtitle" class="section-heading__subtitle" v-html="subtitle"></p>
     </div>
 </template>
 
