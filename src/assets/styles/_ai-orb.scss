@@ -34,8 +34,6 @@
 
     .ai-orb__globe {
       background: radial-gradient(circle at 50% 58%, #0f172a 0%, #020617 100%);
-      -webkit-mask-image: none;
-      mask-image: none;
       box-shadow:
         inset 0 0.083em 0.233em rgba(255, 255, 255, 0.12),
         inset 0 -0.133em 0.267em rgba(0, 0, 0, 0.45),
@@ -62,10 +60,17 @@
     }
 
     .ai-orb__rim {
-      border-color: rgba(255, 255, 255, 0.22);
       box-shadow:
         inset 0 0.02em 0.04em rgba(255, 255, 255, 0.28),
         inset 0 -0.03em 0.06em rgba(0, 0, 0, 0.35);
+      background: radial-gradient(
+        circle at 50% 50%,
+        transparent 68%,
+        rgba(255, 255, 255, 0.08) 71%,
+        rgba(255, 255, 255, 0.28) 73%,
+        rgba(255, 255, 255, 0.12) 74.5%,
+        transparent 76.5%
+      );
     }
 
     .ai-orb__specular--primary {
@@ -170,6 +175,13 @@
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
+  // Soft AA silhouette — hard overflow clip + blurred layers otherwise look stepped
+  clip-path: circle(50% at 50% 50%);
+  -webkit-mask-image: radial-gradient(closest-side, #000 98.5%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 98.5%, transparent 100%);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   // Cloudy glass body + stronger sphere volume
   background:
     radial-gradient(ellipse 70% 50% at 26% 30%, rgba(255, 255, 255, 0.55) 0%, transparent 52%),
@@ -183,8 +195,6 @@
       #1874b8 74%,
       #0c5a96 100%
     );
-  -webkit-mask-image: none;
-  mask-image: none;
   box-shadow:
     // Top glass catch-light
     inset 0 0.14em 0.28em rgba(255, 255, 255, 0.65),
@@ -516,8 +526,9 @@
       transparent 58%,
       rgba(255, 255, 255, 0.16) 72%,
       rgba(56, 189, 248, 0.18) 82%,
-      rgba(8, 90, 160, 0.42) 93%,
-      rgba(6, 70, 130, 0.38) 100%
+      rgba(8, 90, 160, 0.36) 91%,
+      rgba(6, 70, 130, 0.22) 96%,
+      transparent 100%
     ),
     linear-gradient(
       165deg,
@@ -530,12 +541,20 @@
   z-index: 3;
 }
 
-// Soft glass lip — white catch + darker blue inset ring
+// Soft glass lip — gradient ring (avoids jagged 1px circle borders)
 .ai-orb__rim {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 0.012em solid rgba(255, 255, 255, 0.5);
+  border: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 68%,
+    rgba(255, 255, 255, 0.14) 71%,
+    rgba(255, 255, 255, 0.5) 73%,
+    rgba(255, 255, 255, 0.22) 74.5%,
+    transparent 76.5%
+  );
   box-shadow:
     inset 0 0.04em 0.08em rgba(255, 255, 255, 0.55),
     inset 0 0 0.28em rgba(8, 90, 160, 0.4),
