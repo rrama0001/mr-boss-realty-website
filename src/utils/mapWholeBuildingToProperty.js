@@ -1,6 +1,7 @@
 import { formatProjectStatus, getProjectDisplayCity } from '@/utils/mapProjectToProperty';
 import { getListingCity } from '@/utils/propertyCity';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
+import { getCardDeveloperDisplay } from '@/utils/developerDisplay';
 import { getBuildingDetailRoute, getPropertyDetailRoute } from '@/utils/propertyRoutes';
 import { buildBuildingInterestMessage } from '@/utils/siteChat';
 import { resolveMediaUrl } from '@/utils/mediaUrls';
@@ -116,6 +117,11 @@ export function mapWholeBuildingToPropertyCard(building, project = {}, options =
         isWholeBuilding: true,
         title: building.building_name || 'Whole Property',
         propertyName: projectName,
+        developer: getCardDeveloperDisplay(
+            Boolean(project.is_private_on_website ?? building.is_private_on_website),
+            project.developer,
+            building.project_developer
+        ),
         is_private_on_website: Boolean(project.is_private_on_website ?? building.is_private_on_website),
         city: listingCity,
         locationDetail,
@@ -152,6 +158,7 @@ export function mapPublicWholeBuildingToPropertyCard(building, options = {}) {
         city: building.project_city,
         location: building.project_location,
         status: building.project_status,
+        developer: building.project_developer,
         image: resolveMediaUrl(building.image) || '',
     }, options);
 }

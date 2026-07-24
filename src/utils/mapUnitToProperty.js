@@ -1,6 +1,7 @@
 import { formatProjectStatus, getProjectDisplayCity } from '@/utils/mapProjectToProperty';
 import { getListingCity } from '@/utils/propertyCity';
 import { getWebsitePropertyDisplayName } from '@/utils/propertyDisplayName';
+import { getCardDeveloperDisplay } from '@/utils/developerDisplay';
 import { getPropertyDetailRoute, getUnitDetailRoute } from '@/utils/propertyRoutes';
 import { resolveUnitListingRef } from '@/utils/unitSlug';
 import { classifyMediaUrl, resolveMediaUrl } from '@/utils/mediaUrls';
@@ -60,7 +61,6 @@ export function mapUnitToPropertyCard(unit, project = {}, options = {}) {
         metaItems.push({ icon: 'ti ti-calendar', text: formatUnitRentMetaLabel(unit) });
     }
 
-    const projectId = project.id || unit.project_id;
     const projectName = getWebsitePropertyDisplayName({
         is_private_on_website: project.is_private_on_website ?? unit.is_private_on_website,
         project_name: project.project_name || unit.project_name,
@@ -85,6 +85,12 @@ export function mapUnitToPropertyCard(unit, project = {}, options = {}) {
         id: unit.id,
         title: unitLabel,
         propertyName: projectName,
+        developer: getCardDeveloperDisplay(
+            Boolean(project.is_private_on_website ?? unit.is_private_on_website),
+            project.developer,
+            unit.developer,
+            unit.project_developer
+        ),
         is_private_on_website: Boolean(project.is_private_on_website ?? unit.is_private_on_website),
         city: listingCity,
         locationDetail,
@@ -117,5 +123,6 @@ export function mapPublicUnitToPropertyCard(unit, options = {}) {
         city: unit.project_city,
         location: unit.project_location,
         status: unit.project_status,
+        developer: unit.developer || unit.project_developer,
     }, options);
 }

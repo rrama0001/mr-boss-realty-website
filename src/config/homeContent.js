@@ -1,3 +1,8 @@
+import popularPlacesCebuImage from '@/assets/images/popular-places-cebu.jpg';
+import popularPlacesIloiloImage from '@/assets/images/popular-places-iloilo.jpg';
+import popularPlacesDavaoImage from '@/assets/images/popular-places-davao.jpg';
+import popularPlacesMakatiImage from '@/assets/images/popular-places-makati.jpg';
+
 export const PROPERTY_TYPES = [
     'All Types',
     'Condominium',
@@ -154,28 +159,28 @@ export const POPULAR_PLACES = [
         name: 'Makati City',
         city: 'Makati City',
         cities: ['Makati City', 'Makati'],
-        image: 'https://images.unsplash.com/photo-1580465446156-0a5b3eee11ae?w=800&q=80',
+        image: popularPlacesMakatiImage,
     },
     {
         id: 2,
         name: 'Cebu City',
         city: 'Cebu City',
         cities: ['Cebu City', 'Cebu'],
-        image: 'https://images.unsplash.com/photo-1545509703-506872a296cb?w=800&q=80',
+        image: popularPlacesCebuImage,
     },
     {
         id: 3,
         name: 'Iloilo City',
         city: 'Iloilo City',
         cities: ['Iloilo City', 'Iloilo'],
-        image: 'https://images.unsplash.com/photo-1694931765379-6e7210f1a520?w=800&q=80',
+        image: popularPlacesIloiloImage,
     },
     {
         id: 4,
         name: 'Davao City',
         city: 'Davao City',
         cities: ['Davao City', 'Davao'],
-        image: 'https://images.unsplash.com/photo-1709086566131-1161bc8ee7a5?w=800&q=80',
+        image: popularPlacesDavaoImage,
     },
 ];
 

@@ -34,6 +34,7 @@
                     </router-link>
                     <template v-else>{{ displayPropertyName }}</template>
                 </p>
+                <p v-if="displayDeveloper" class="property-card__developer">{{ displayDeveloper }}</p>
                 <p class="property-card__location">
                     <LocationWithCity
                         v-if="property.city"
@@ -141,6 +142,13 @@ export default {
                 is_private_on_website: this.property.is_private_on_website,
                 project_name: this.property.propertyName,
             });
+        },
+        displayDeveloper() {
+            if (this.property.is_private_on_website) {
+                return '';
+            }
+
+            return String(this.property.developer || '').trim();
         },
         propertyLinkTo() {
             const target = this.property.propertyTo;
