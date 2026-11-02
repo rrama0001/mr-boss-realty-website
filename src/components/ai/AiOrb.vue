@@ -75,17 +75,28 @@ export default {
         return {
             faviconUrl,
             paused: false,
+            offscreen: false,
         };
     },
     mounted() {
-        this.onVisibilityChange = () => {
-            this.paused = document.hidden;
+        this.syncPaused = () => {
+            this.paused = document.hidden || this.offscreen;
         };
-        document.addEventListener('visibilitychange', this.onVisibilityChange);
-        this.paused = document.hidden;
+        document.addEventListener('visibilitychange', this.syncPaused);
+
+        if (typeof IntersectionObserver !== 'undefined') {
+            this._io = new IntersectionObserver((entries) => {
+                this.offscreen = !entries[0]?.isIntersecting;
+                this.syncPaused();
+            });
+            this._io.observe(this.$el);
+        }
+
+        this.syncPaused();
     },
     beforeUnmount() {
-        document.removeEventListener('visibilitychange', this.onVisibilityChange);
+        document.removeEventListener('visibilitychange', this.syncPaused);
+        this._io?.disconnect();
     },
 };
 </script>

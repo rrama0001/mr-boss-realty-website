@@ -48,7 +48,16 @@
                         class="place-card"
                         :aria-label="`Browse properties in ${place.name}`"
                     >
-                        <img :src="place.image" :alt="place.name" class="place-card__image" loading="lazy" />
+                        <img
+                            :src="place.image"
+                            :alt="place.name"
+                            class="place-card__image"
+                            width="1200"
+                            height="800"
+                            loading="lazy"
+                            decoding="async"
+                            fetchpriority="low"
+                        />
                         <h3 class="place-card__name">{{ place.name }}</h3>
                         <p class="place-card__count">{{ formatPlaceCount(place.count) }}</p>
                     </RouterLink>

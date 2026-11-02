@@ -62,10 +62,10 @@
 
 .home-hero {
 	position: relative;
-	width: 100vw;
-	max-width: 100vw;
-	margin-left: calc(50% - 50vw);
-	margin-right: calc(50% - 50vw);
+	width: 100%;
+	max-width: 100%;
+	margin-left: 0;
+	margin-right: 0;
 	--hero-section-height: 100vh;
 	height: var(--hero-section-height);
 	min-height: var(--hero-section-height);
@@ -1465,6 +1465,7 @@
 	border-radius: 0.5rem;
 	overflow: hidden;
 	min-height: 220px;
+	aspect-ratio: 16 / 10;
 	text-decoration: none;
 	color: inherit;
 	transition:
@@ -1487,9 +1488,10 @@
 }
 
 .place-card__image {
+	position: absolute;
+	inset: 0;
 	width: 100%;
 	height: 100%;
-	min-height: 220px;
 	object-fit: cover;
 	transition: transform 0.35s ease;
 }
