@@ -3,7 +3,7 @@
         <a href="#main-content" class="skip-link">Skip to main content</a>
         <SiteHeader />
         <main id="main-content" class="site-main" tabindex="-1">
-            <keep-alive include="HomeView,PropertiesView,PropertySegmentView,UnitsView,ContactView">
+            <keep-alive include="HomeView,PropertiesView,LotsView,PropertySegmentView,UnitsView,ContactView">
                 <router-view />
             </keep-alive>
         </main>

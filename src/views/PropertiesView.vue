@@ -32,7 +32,7 @@
             <div class="container-xl">
                 <div v-if="loading" class="properties-page__state">
                     <div class="properties-page__spinner" aria-hidden="true"></div>
-                    <p>Loading properties...</p>
+                    <p>{{ isLotsBrowsePage ? 'Loading lots...' : 'Loading properties...' }}</p>
                 </div>
 
                 <div v-else-if="error" class="properties-page__state properties-page__state--error">
@@ -46,7 +46,8 @@
                 </div>
 
                 <div v-else-if="!totalListingCount" class="properties-page__state">
-                    <p>No properties are listed yet. Please check back soon.</p>
+                    <p v-if="isLotsBrowsePage">No lots are listed yet. Please check back soon.</p>
+                    <p v-else>No properties are listed yet. Please check back soon.</p>
                 </div>
 
                 <template v-else>
@@ -63,24 +64,31 @@
                                         {{ filteredPropertyCards.length }} propert{{ filteredPropertyCards.length === 1 ? 'y' : 'ies' }} in {{ routeCityName }}
                                     </template>
                                     <template v-else-if="filteredPropertyCards.length !== totalListingCount">
-                                        Showing {{ filteredPropertyCards.length }} of {{ totalListingCount }} properties
+                                        Showing {{ filteredPropertyCards.length }} of {{ totalListingCount }}
+                                        {{ isLotsBrowsePage ? (totalListingCount === 1 ? 'lot' : 'lots') : 'properties' }}
                                     </template>
                                     <template v-else>
-                                        {{ totalListingCount }} propert{{ totalListingCount === 1 ? 'y' : 'ies' }} available
+                                        {{ totalListingCount }}
+                                        {{ isLotsBrowsePage
+                                            ? (totalListingCount === 1 ? 'lot' : 'lots')
+                                            : (totalListingCount === 1 ? 'property' : 'properties') }}
+                                        available
                                     </template>
                                 </p>
                             </div>
                         </div>
 
                         <div class="property-detail__units-search site-search site-search--light">
-                            <label class="visually-hidden" for="properties-search">Search properties</label>
+                            <label class="visually-hidden" for="properties-search">
+                                {{ isLotsBrowsePage ? 'Search lots' : 'Search properties' }}
+                            </label>
                             <input
                                 id="properties-search"
                                 ref="searchInput"
                                 v-model="searchDraft"
                                 type="search"
                                 class="form-control site-search__input"
-                                placeholder="Search property..."
+                                :placeholder="isLotsBrowsePage ? 'Search lot...' : 'Search property...'"
                                 autocomplete="off"
                                 @keydown.enter.prevent="applySearch"
                                 @input="onSearchInput"
@@ -248,7 +256,7 @@
                                 </button>
                             </div>
                             <p v-else class="property-detail__filters-empty">
-                                No properties match your search or filters.
+                                {{ isLotsBrowsePage ? 'No lots match your search or filters.' : 'No properties match your search or filters.' }}
                                 <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
                                     Show all
                                 </button>
@@ -275,6 +283,7 @@ import { mapWholeBuildingToPropertyCard } from '@/utils/mapWholeBuildingToProper
 import { mapPublicWholeBuildingToPropertyCard } from '@/utils/mapWholeBuildingToProperty';
 import { buildingMatchesSearch, unitMatchesSearch } from '@/utils/unitSearch';
 import { flushPendingScrollRestore } from '@/utils/scroll';
+import { isLotBuildingType, isLotListing } from '@/constants/lotListings';
 import heroImageUrl from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 
 export default {
@@ -300,6 +309,10 @@ export default {
         };
     },
     computed: {
+        isLotsBrowsePage() {
+            return this.$route.name === 'lots'
+                || this.$route.meta?.listingCategory === 'lots';
+        },
         isCityBrowsePage() {
             return this.$route.name === 'property-segment';
         },
@@ -331,12 +344,18 @@ export default {
             return this.isCityBrowsePage ? { linkToProject: true } : {};
         },
         heroTitle() {
+            if (this.isLotsBrowsePage) {
+                return 'Lots for Sale & Lease';
+            }
             if (this.isCityBrowsePage && this.routeCityName) {
                 return `Properties in ${this.routeCityName}`;
             }
             return 'Properties';
         },
         heroLead() {
+            if (this.isLotsBrowsePage) {
+                return 'Browse residential, commercial, and agricultural lots available for sale or lease across the Philippines.';
+            }
             if (this.isCityBrowsePage && this.routeCityName) {
                 return `Browse available listings in ${this.routeCityName}—condominiums, houses, lots, and rental properties.`;
             }
@@ -344,18 +363,57 @@ export default {
             return 'Browse our trusted developments across the Philippines—from pre-selling condominiums and ready-for-occupancy units to lots and rental properties.';
         },
         sectionTitle() {
+            if (this.isLotsBrowsePage) {
+                return 'Available Lots';
+            }
             if (this.isCityBrowsePage && this.routeCityName) {
                 return `Properties in ${this.routeCityName}`;
             }
             return 'All Properties';
         },
+        scopedPrivateProperties() {
+            if (!this.isLotsBrowsePage) {
+                return this.privateProperties;
+            }
+
+            return this.privateProperties
+                .map((property) => {
+                    const buildings = getWholeBuildingListings(property)
+                        .filter((building) => isLotBuildingType(building.building_type));
+                    const units = (property.units || [])
+                        .filter((unit) => isLotBuildingType(unit.building_type));
+
+                    if (!buildings.length && !units.length) {
+                        return null;
+                    }
+
+                    return {
+                        ...property,
+                        buildings: (property.buildings || []).filter((building) => (
+                            building.is_whole_property_listing
+                                ? isLotBuildingType(building.building_type)
+                                : false
+                        )),
+                        units,
+                        _lotWholeBuildings: buildings,
+                    };
+                })
+                .filter(Boolean);
+        },
+        scopedUnits() {
+            if (!this.isLotsBrowsePage) {
+                return this.units;
+            }
+
+            return this.units.filter((unit) => isLotListing(unit));
+        },
         totalListingCount() {
-            const privateCount = this.privateProperties.reduce(
+            const privateCount = this.scopedPrivateProperties.reduce(
                 (sum, property) => sum + this.countPropertyListings(property),
                 0,
             );
 
-            return privateCount + this.units.length;
+            return privateCount + this.scopedUnits.length;
         },
         hasListingFilters() {
             return this.showCityFilter
@@ -369,12 +427,12 @@ export default {
         availableCities() {
             const cities = new Set();
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 const city = getListingCity(property);
                 if (city) cities.add(city);
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
                 const city = getListingCity({ city: unit.project_city });
                 if (city) cities.add(city);
             });
@@ -383,20 +441,21 @@ export default {
         },
         cityCounts() {
             return buildCityListingCounts({
-                privateProperties: this.privateProperties,
-                units: this.units,
+                privateProperties: this.scopedPrivateProperties,
+                units: this.scopedUnits,
             });
         },
         availableUnitTypes() {
             const types = new Set();
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 (property.units || []).forEach((unit) => {
                     if (unit.unit_type) types.add(unit.unit_type);
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
+                if (unit.listing_kind === 'whole_building') return;
                 if (unit.unit_type) types.add(unit.unit_type);
             });
 
@@ -405,14 +464,15 @@ export default {
         unitTypeCounts() {
             const counts = {};
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 (property.units || []).forEach((unit) => {
                     if (!unit.unit_type) return;
                     counts[unit.unit_type] = (counts[unit.unit_type] || 0) + 1;
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
+                if (unit.listing_kind === 'whole_building') return;
                 if (!unit.unit_type) return;
                 counts[unit.unit_type] = (counts[unit.unit_type] || 0) + 1;
             });
@@ -422,7 +482,7 @@ export default {
         availableBedrooms() {
             const bedrooms = new Set();
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 getWholeBuildingListings(property).forEach((building) => {
                     if (building.bedrooms != null) bedrooms.add(building.bedrooms);
                 });
@@ -431,7 +491,7 @@ export default {
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
                 if (unit.bedrooms != null) bedrooms.add(unit.bedrooms);
             });
 
@@ -440,7 +500,7 @@ export default {
         bedroomCounts() {
             const counts = {};
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 getWholeBuildingListings(property).forEach((building) => {
                     if (building.bedrooms == null) return;
                     counts[building.bedrooms] = (counts[building.bedrooms] || 0) + 1;
@@ -452,7 +512,7 @@ export default {
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
                 if (unit.bedrooms == null) return;
                 counts[unit.bedrooms] = (counts[unit.bedrooms] || 0) + 1;
             });
@@ -462,7 +522,7 @@ export default {
         availableBathrooms() {
             const bathrooms = new Set();
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 getWholeBuildingListings(property).forEach((building) => {
                     if (building.bathrooms != null) bathrooms.add(building.bathrooms);
                 });
@@ -471,7 +531,7 @@ export default {
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
                 if (unit.bathrooms != null) bathrooms.add(unit.bathrooms);
             });
 
@@ -480,7 +540,7 @@ export default {
         bathroomCounts() {
             const counts = {};
 
-            this.privateProperties.forEach((property) => {
+            this.scopedPrivateProperties.forEach((property) => {
                 getWholeBuildingListings(property).forEach((building) => {
                     if (building.bathrooms == null) return;
                     counts[building.bathrooms] = (counts[building.bathrooms] || 0) + 1;
@@ -492,7 +552,7 @@ export default {
                 });
             });
 
-            this.units.forEach((unit) => {
+            this.scopedUnits.forEach((unit) => {
                 if (unit.bathrooms == null) return;
                 counts[unit.bathrooms] = (counts[unit.bathrooms] || 0) + 1;
             });
@@ -502,7 +562,7 @@ export default {
         filteredPrivateListingCards() {
             const query = this.searchQuery.trim();
 
-            return this.privateProperties.flatMap((property) => {
+            return this.scopedPrivateProperties.flatMap((property) => {
                 const propertyCity = getListingCity(property);
                 if (!this.matchesCityValue(propertyCity)) {
                     return [];
@@ -512,7 +572,8 @@ export default {
 
                 const wholeBuildingCards = getWholeBuildingListings(property)
                     .filter((building) => (
-                        this.matchesBedroomFilter(building)
+                        this.matchesLotCategory(building)
+                        && this.matchesBedroomFilter(building)
                         && this.matchesBathroomFilter(building)
                         && buildingMatchesSearch(building, query, property)
                     ))
@@ -523,7 +584,8 @@ export default {
 
                 const unitCards = (property.units || [])
                     .filter((unit) => (
-                        this.matchesUnitTypeFilter(unit)
+                        this.matchesLotCategory(unit)
+                        && this.matchesUnitTypeFilter(unit)
                         && this.matchesBedroomFilter(unit)
                         && this.matchesBathroomFilter(unit)
                         && unitMatchesSearch(unit, query, property)
@@ -563,8 +625,9 @@ export default {
         filteredUnits() {
             const query = this.searchQuery.trim();
 
-            return this.units.filter((unit) => (
-                this.matchesCityFilter(unit)
+            return this.scopedUnits.filter((unit) => (
+                this.matchesLotCategory(unit)
+                && this.matchesCityFilter(unit)
                 && this.matchesUnitTypeFilter(unit)
                 && this.matchesBedroomFilter(unit)
                 && this.matchesBathroomFilter(unit)
@@ -612,6 +675,12 @@ export default {
                 this.clearLegacyPageQuery();
                 this.updateCityPageMeta();
             }
+        },
+        isLotsBrowsePage() {
+            if (this.loading) return;
+            this.resetAllFilters();
+            this.resetVisibleListings();
+            this.updateCityPageMeta();
         },
         selectedCities: 'onListingFiltersChanged',
         availableCities: 'syncAllCitiesIndeterminate',
@@ -678,6 +747,16 @@ export default {
                     description: 'Browse all properties with Mr. Boss Realty.',
                     canonical,
                     robots: 'noindex, follow',
+                });
+                return;
+            }
+
+            if (this.isLotsBrowsePage) {
+                updatePageMeta({
+                    title: 'Lots for Sale & Lease | Mr. Boss Realty',
+                    description:
+                        'Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty.',
+                    canonical,
                 });
                 return;
             }
@@ -762,6 +841,10 @@ export default {
         },
         matchesCityFilter(unit) {
             return this.matchesCityValue(this.getUnitCity(unit));
+        },
+        matchesLotCategory(item) {
+            if (!this.isLotsBrowsePage) return true;
+            return isLotListing(item) || isLotBuildingType(item.building_type);
         },
         matchesWholeBuildingSearch(building, query) {
             return buildingMatchesSearch(building, query);

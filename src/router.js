@@ -105,6 +105,17 @@ const router = createRouter({
                     },
                 },
                 {
+                    path: 'lots',
+                    name: 'lots',
+                    component: () => import('@/views/LotsView.vue'),
+                    meta: {
+                        title: 'Lots for Sale & Lease | Mr. Boss Realty',
+                        description:
+                            'Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty.',
+                        path: '/lots',
+                    },
+                },
+                {
                     path: 'listings/:projectSlug/:listingRef',
                     redirect: (to) => ({
                         name: 'property-listing-detail-legacy',

@@ -11,10 +11,33 @@ export default defineConfig(({ mode }) => {
         base: '/',
         build: {
             outDir: 'dist',
+            assetsDir: 'assets',
             rollupOptions: {
                 output: {
                     manualChunks: {
                         vue: ['vue', 'vue-router'],
+                    },
+                    entryFileNames: 'assets/js/[name]-[hash].js',
+                    chunkFileNames: 'assets/js/[name]-[hash].js',
+                    assetFileNames: (assetInfo) => {
+                        const fileName = assetInfo.name || '';
+                        const ext = fileName.includes('.')
+                            ? fileName.slice(fileName.lastIndexOf('.') + 1).toLowerCase()
+                            : '';
+
+                        if (ext === 'css') {
+                            return 'assets/css/[name]-[hash][extname]';
+                        }
+
+                        if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'avif'].includes(ext)) {
+                            return 'assets/images/[name]-[hash][extname]';
+                        }
+
+                        if (['woff', 'woff2', 'ttf', 'eot', 'otf'].includes(ext)) {
+                            return 'assets/fonts/[name]-[hash][extname]';
+                        }
+
+                        return 'assets/misc/[name]-[hash][extname]';
                     },
                 },
             },

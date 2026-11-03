@@ -299,7 +299,10 @@ import {
     SITE_CHAT_INTEREST_EVENT,
     SITE_CHAT_MESSAGE_EVENT,
     SITE_CHAT_STORAGE_KEY,
+    clearSiteChatStorage,
     dispatchSiteChatConversationChange,
+    readSiteChatStorage,
+    writeSiteChatStorage,
 } from '@/utils/siteChat';
 import {
     AI_GUIDE_NUDGE_IDLE_MS,
@@ -383,6 +386,9 @@ export default {
             return this.assistantActive && this.isDocked && !this.isDockAnimating;
         },
         showFunctionalOrb() {
+            // Only use the floating pin-orb during dock/minimize animations.
+            // Resting minimized state renders AiOrb inside the trigger so the
+            // widget stays visible even if settle/pin positioning fails.
             if (this.orbPinActive) return true;
             if (
                 this.isDockAnimating &&
@@ -390,9 +396,7 @@ export default {
             ) {
                 return true;
             }
-            if (!this.assistantActive) return false;
-            if (this.isDocked && !this.isDockAnimating) return false;
-            return this.isMinimized;
+            return false;
         },
         useDockLayout() {
             return true;
@@ -614,12 +618,11 @@ export default {
             if (this._restoringChatState) return;
 
             if (!this.assistantActive) {
-                sessionStorage.removeItem(CHAT_STORAGE_KEY);
+                clearSiteChatStorage(CHAT_STORAGE_KEY);
                 return;
             }
 
-            sessionStorage.setItem(
-                CHAT_STORAGE_KEY,
+            writeSiteChatStorage(
                 JSON.stringify({
                     widgetActive: true,
                     assistantActive: true,
@@ -629,13 +632,14 @@ export default {
                     messages: this.messages,
                     chatMode: this.chatMode === 'normal' ? 'minimized' : this.chatMode,
                     dockedModeAnchorRect: this.dockedModeAnchorRect,
-                })
+                }),
+                CHAT_STORAGE_KEY,
             );
         },
 
         restoreChatState() {
             try {
-                const raw = sessionStorage.getItem(CHAT_STORAGE_KEY);
+                const raw = readSiteChatStorage(CHAT_STORAGE_KEY);
                 if (!raw) return false;
 
                 const saved = JSON.parse(raw);
@@ -643,7 +647,7 @@ export default {
                 const lastActivityAt = Number(saved?.lastActivityAt) || 0;
 
                 if (hasMessages && this.isStoredChatIdle(lastActivityAt)) {
-                    sessionStorage.removeItem(CHAT_STORAGE_KEY);
+                    clearSiteChatStorage(CHAT_STORAGE_KEY);
                     this.chatSessionId = `website-${Date.now()}`;
                     this.lastActivityAt = Date.now();
                     this.messages = [];
@@ -671,7 +675,7 @@ export default {
             } catch (err) {
                 this._restoringChatState = false;
                 console.warn('Could not restore chat session:', err);
-                sessionStorage.removeItem(CHAT_STORAGE_KEY);
+                clearSiteChatStorage(CHAT_STORAGE_KEY);
                 return false;
             }
         },
@@ -827,7 +831,8 @@ export default {
                 this.pushAssistantMessage(res.data);
             } catch (err) {
                 console.error('AI reply failed:', err);
-                this.pushAssistantMessage({ reply: AI_REPLY_ERROR });
+                const apiError = String(err.response?.data?.error || '').trim();
+                this.pushAssistantMessage({ reply: apiError || AI_REPLY_ERROR });
             } finally {
                 this.thinking = false;
                 this.scrollChatToBottom();

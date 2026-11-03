@@ -3,6 +3,33 @@ export const SITE_CHAT_MESSAGE_EVENT = 'mrboss:chat-message';
 export const SITE_CHAT_CONVERSATION_EVENT = 'mrboss:chat-conversation';
 export const SITE_CHAT_STORAGE_KEY = 'mrboss-website-hero-chat';
 
+/** sessionStorage can throw SecurityError (privacy mode, blocked storage, sandboxed iframe). */
+export function readSiteChatStorage(key = SITE_CHAT_STORAGE_KEY) {
+    try {
+        return sessionStorage.getItem(key);
+    } catch {
+        return null;
+    }
+}
+
+export function writeSiteChatStorage(value, key = SITE_CHAT_STORAGE_KEY) {
+    try {
+        sessionStorage.setItem(key, value);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function clearSiteChatStorage(key = SITE_CHAT_STORAGE_KEY) {
+    try {
+        sessionStorage.removeItem(key);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 function isStoredChatIdleExpired(saved) {
     const hours = Number(saved?.chatIdleTtlHours);
     if (!Number.isInteger(hours) || hours < 1) return false;
@@ -57,11 +84,11 @@ export function dispatchSiteChatMessage(text) {
 
 export function hasStoredSiteChatConversation() {
     try {
-        const raw = sessionStorage.getItem(SITE_CHAT_STORAGE_KEY);
+        const raw = readSiteChatStorage();
         if (!raw) return false;
         const saved = JSON.parse(raw);
         if (isStoredChatIdleExpired(saved)) {
-            sessionStorage.removeItem(SITE_CHAT_STORAGE_KEY);
+            clearSiteChatStorage();
             return false;
         }
         return Array.isArray(saved?.messages) && saved.messages.length > 0;
