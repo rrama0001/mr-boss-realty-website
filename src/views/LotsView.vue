@@ -13,7 +13,7 @@
             <div class="container-xl property-hero__inner">
                 <div class="property-hero__copy">
                     <p class="property-hero__eyebrow">Mr. Boss Realty</p>
-                    <h1 class="property-hero__title">Lots for Sale &amp; Lease</h1>
+                    <h1 class="property-hero__title">Land &amp; Lots</h1>
                     <p class="property-hero__lead">
                         Browse residential, commercial, and agricultural lots available for sale or lease across the Philippines.
                     </p>
@@ -427,7 +427,7 @@ export default {
     methods: {
         updatePageMetaTags() {
             updatePageMeta({
-                title: 'Lots for Sale & Lease | Mr. Boss Realty',
+                title: 'Land & Lots | Mr. Boss Realty',
                 description:
                     'Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty.',
                 canonical: getSiteUrl('/lots'),

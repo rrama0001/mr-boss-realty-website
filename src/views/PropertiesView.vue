@@ -61,10 +61,10 @@
                                 <h2>{{ sectionTitle }}</h2>
                                 <p>
                                     <template v-if="isCityBrowsePage && routeCityName">
-                                        {{ filteredPropertyCards.length }} propert{{ filteredPropertyCards.length === 1 ? 'y' : 'ies' }} in {{ routeCityName }}
+                                        {{ filteredListingCount }} propert{{ filteredListingCount === 1 ? 'y' : 'ies' }} in {{ routeCityName }}
                                     </template>
-                                    <template v-else-if="filteredPropertyCards.length !== totalListingCount">
-                                        Showing {{ filteredPropertyCards.length }} of {{ totalListingCount }}
+                                    <template v-else-if="filteredListingCount !== totalListingCount">
+                                        Showing {{ filteredListingCount }} of {{ totalListingCount }}
                                         {{ isLotsBrowsePage ? (totalListingCount === 1 ? 'lot' : 'lots') : 'properties' }}
                                     </template>
                                     <template v-else>
@@ -114,153 +114,255 @@
                             </div>
                         </div>
 
-                        <aside
-                            v-if="hasListingFilters"
-                            class="property-detail__filters"
-                            aria-label="Filter properties"
-                        >
-                            <div v-if="showCityFilter" class="property-detail__filters-group">
-                                <label class="property-detail__filters-title property-detail__filters-title--toggle">
-                                    <input
-                                        ref="allCitiesCheckbox"
-                                        type="checkbox"
-                                        class="property-detail__filter-checkbox"
-                                        :checked="allCitiesSelected"
-                                        @change="toggleAllCities"
-                                    />
-                                    <span>City</span>
-                                </label>
-                                <ul class="property-detail__filters-list">
-                                    <li v-for="city in availableCities" :key="city">
-                                        <label class="property-detail__filter-option">
-                                            <input
-                                                v-model="selectedCities"
-                                                type="checkbox"
-                                                class="property-detail__filter-checkbox"
-                                                :value="city"
-                                            />
-                                            <span class="property-detail__filter-label">{{ city }}</span>
-                                            <span class="property-detail__filter-count">{{ cityCounts[city] || 0 }}</span>
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div v-if="availableUnitTypes.length" class="property-detail__filters-group">
-                                <label class="property-detail__filters-title property-detail__filters-title--toggle">
-                                    <input
-                                        ref="allUnitTypesCheckbox"
-                                        type="checkbox"
-                                        class="property-detail__filter-checkbox"
-                                        :checked="allUnitTypesSelected"
-                                        @change="toggleAllUnitTypes"
-                                    />
-                                    <span>Unit type</span>
-                                </label>
-                                <ul class="property-detail__filters-list">
-                                    <li v-for="unitType in availableUnitTypes" :key="unitType">
-                                        <label class="property-detail__filter-option">
-                                            <input
-                                                v-model="selectedUnitTypes"
-                                                type="checkbox"
-                                                class="property-detail__filter-checkbox"
-                                                :value="unitType"
-                                            />
-                                            <span class="property-detail__filter-label">{{ unitType }}</span>
-                                            <span class="property-detail__filter-count">{{ unitTypeCounts[unitType] || 0 }}</span>
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div v-if="availableBedrooms.length" class="property-detail__filters-group">
-                                <label class="property-detail__filters-title property-detail__filters-title--toggle">
-                                    <input
-                                        ref="allBedroomsCheckbox"
-                                        type="checkbox"
-                                        class="property-detail__filter-checkbox"
-                                        :checked="allBedroomsSelected"
-                                        @change="toggleAllBedrooms"
-                                    />
-                                    <span>Bedrooms</span>
-                                </label>
-                                <ul class="property-detail__filters-list">
-                                    <li v-for="bedroom in availableBedrooms" :key="`bed-${bedroom}`">
-                                        <label class="property-detail__filter-option">
-                                            <input
-                                                v-model="selectedBedrooms"
-                                                type="checkbox"
-                                                class="property-detail__filter-checkbox"
-                                                :value="bedroom"
-                                            />
-                                            <span class="property-detail__filter-label">{{ bedroom }} Br</span>
-                                            <span class="property-detail__filter-count">{{ bedroomCounts[bedroom] || 0 }}</span>
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div v-if="availableBathrooms.length" class="property-detail__filters-group">
-                                <label class="property-detail__filters-title property-detail__filters-title--toggle">
-                                    <input
-                                        ref="allBathroomsCheckbox"
-                                        type="checkbox"
-                                        class="property-detail__filter-checkbox"
-                                        :checked="allBathroomsSelected"
-                                        @change="toggleAllBathrooms"
-                                    />
-                                    <span>Bathrooms</span>
-                                </label>
-                                <ul class="property-detail__filters-list">
-                                    <li v-for="bathroom in availableBathrooms" :key="`bath-${bathroom}`">
-                                        <label class="property-detail__filter-option">
-                                            <input
-                                                v-model="selectedBathrooms"
-                                                type="checkbox"
-                                                class="property-detail__filter-checkbox"
-                                                :value="bathroom"
-                                            />
-                                            <span class="property-detail__filter-label">{{ bathroom }} Ba</span>
-                                            <span class="property-detail__filter-count">{{ bathroomCounts[bathroom] || 0 }}</span>
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
-                        </aside>
-
-                        <div class="property-detail__units-main">
-                            <div v-if="filteredPropertyCards.length" class="property-grid">
-                                <PropertyCard
-                                    v-for="(property, index) in visiblePropertyCards"
-                                    :key="property.cardKey"
-                                    :property="property"
-                                    :image-loading="index < 3 ? 'eager' : 'lazy'"
-                                    :fetch-priority="index === 0 ? 'high' : 'auto'"
-                                    :show-interest-button="true"
-                                />
-                            </div>
+                        <div class="properties-page__listing-flow">
                             <div
-                                v-if="filteredPropertyCards.length"
-                                class="properties-page__load-more"
+                                v-if="hasListingFilters"
+                                ref="filtersToggleSentinel"
+                                class="properties-page__filters-sentinel"
+                                aria-hidden="true"
+                            ></div>
+                            <aside
+                                v-if="hasListingFilters"
+                                class="property-detail__filters"
+                                :class="{
+                                    'property-detail__filters--open': filtersExpanded,
+                                    'property-detail__filters--stuck': filtersToggleStuck,
+                                }"
+                                aria-label="Filter properties"
                             >
-                                <p class="properties-page__load-more-status">
-                                    {{ visibleCountClamped }} of {{ filteredPropertyCards.length }}
-                                </p>
-                                <button
-                                    v-if="hasMoreListings"
-                                    type="button"
-                                    class="properties-page__load-more-btn"
-                                    @click="loadMoreListings"
+                                <div class="property-detail__filters-shell">
+                                    <div class="property-detail__filters-bar">
+                                        <button
+                                            type="button"
+                                            class="property-detail__filters-toggle"
+                                            :aria-expanded="filtersExpanded ? 'true' : 'false'"
+                                            aria-controls="property-listing-filters"
+                                            @click="filtersExpanded = !filtersExpanded"
+                                        >
+                                            <span class="property-detail__filters-toggle-label">
+                                                <i class="ti ti-filter" aria-hidden="true"></i>
+                                                <span>Filters</span>
+                                                <span
+                                                    v-if="activeFilterCount"
+                                                    class="property-detail__filters-toggle-count"
+                                                >{{ activeFilterCount }}</span>
+                                            </span>
+                                        </button>
+                                        <button
+                                            v-if="activeFilterCount"
+                                            type="button"
+                                            class="property-detail__filters-clear"
+                                            @click="resetAllFilters"
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="property-detail__filters-chevron"
+                                            :aria-expanded="filtersExpanded ? 'true' : 'false'"
+                                            aria-controls="property-listing-filters"
+                                            aria-label="Toggle filters"
+                                            @click="filtersExpanded = !filtersExpanded"
+                                        >
+                                            <i
+                                                class="ti"
+                                                :class="filtersExpanded ? 'ti-chevron-up' : 'ti-chevron-down'"
+                                                aria-hidden="true"
+                                            ></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="property-listing-filters" class="property-detail__filters-panel">
+                                    <div class="property-detail__filters-panel-inner">
+                                        <div v-if="showCityFilter" class="property-detail__filters-group">
+                                            <label class="property-detail__filters-title property-detail__filters-title--toggle">
+                                                <input
+                                                    ref="allCitiesCheckbox"
+                                                    type="checkbox"
+                                                    class="property-detail__filter-checkbox"
+                                                    :checked="allCitiesSelected"
+                                                    @change="toggleAllCities"
+                                                />
+                                                <span>City</span>
+                                            </label>
+                                            <ul class="property-detail__filters-list">
+                                                <li v-for="city in availableCities" :key="city">
+                                                    <label class="property-detail__filter-option">
+                                                        <input
+                                                            v-model="selectedCities"
+                                                            type="checkbox"
+                                                            class="property-detail__filter-checkbox"
+                                                            :value="city"
+                                                        />
+                                                        <span class="property-detail__filter-label">{{ city }}</span>
+                                                        <span class="property-detail__filter-count">{{ cityCounts[city] || 0 }}</span>
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div v-if="availableUnitTypes.length" class="property-detail__filters-group">
+                                            <label class="property-detail__filters-title property-detail__filters-title--toggle">
+                                                <input
+                                                    ref="allUnitTypesCheckbox"
+                                                    type="checkbox"
+                                                    class="property-detail__filter-checkbox"
+                                                    :checked="allUnitTypesSelected"
+                                                    @change="toggleAllUnitTypes"
+                                                />
+                                                <span>Unit type</span>
+                                            </label>
+                                            <ul class="property-detail__filters-list">
+                                                <li v-for="unitType in availableUnitTypes" :key="unitType">
+                                                    <label class="property-detail__filter-option">
+                                                        <input
+                                                            v-model="selectedUnitTypes"
+                                                            type="checkbox"
+                                                            class="property-detail__filter-checkbox"
+                                                            :value="unitType"
+                                                        />
+                                                        <span class="property-detail__filter-label">{{ unitType }}</span>
+                                                        <span class="property-detail__filter-count">{{ unitTypeCounts[unitType] || 0 }}</span>
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div v-if="availableBedrooms.length" class="property-detail__filters-group">
+                                            <label class="property-detail__filters-title property-detail__filters-title--toggle">
+                                                <input
+                                                    ref="allBedroomsCheckbox"
+                                                    type="checkbox"
+                                                    class="property-detail__filter-checkbox"
+                                                    :checked="allBedroomsSelected"
+                                                    @change="toggleAllBedrooms"
+                                                />
+                                                <span>Bedrooms</span>
+                                            </label>
+                                            <ul class="property-detail__filters-list">
+                                                <li v-for="bedroom in availableBedrooms" :key="`bed-${bedroom}`">
+                                                    <label class="property-detail__filter-option">
+                                                        <input
+                                                            v-model="selectedBedrooms"
+                                                            type="checkbox"
+                                                            class="property-detail__filter-checkbox"
+                                                            :value="bedroom"
+                                                        />
+                                                        <span class="property-detail__filter-label">{{ bedroom }} Br</span>
+                                                        <span class="property-detail__filter-count">{{ bedroomCounts[bedroom] || 0 }}</span>
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div v-if="availableBathrooms.length" class="property-detail__filters-group">
+                                            <label class="property-detail__filters-title property-detail__filters-title--toggle">
+                                                <input
+                                                    ref="allBathroomsCheckbox"
+                                                    type="checkbox"
+                                                    class="property-detail__filter-checkbox"
+                                                    :checked="allBathroomsSelected"
+                                                    @change="toggleAllBathrooms"
+                                                />
+                                                <span>Bathrooms</span>
+                                            </label>
+                                            <ul class="property-detail__filters-list">
+                                                <li v-for="bathroom in availableBathrooms" :key="`bath-${bathroom}`">
+                                                    <label class="property-detail__filter-option">
+                                                        <input
+                                                            v-model="selectedBathrooms"
+                                                            type="checkbox"
+                                                            class="property-detail__filter-checkbox"
+                                                            :value="bathroom"
+                                                        />
+                                                        <span class="property-detail__filter-label">{{ bathroom }} Ba</span>
+                                                        <span class="property-detail__filter-count">{{ bathroomCounts[bathroom] || 0 }}</span>
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+
+                            <div
+                                class="property-detail__units-main"
+                                :class="{ 'property-detail__units-main--loading': listLoading }"
+                                :aria-busy="listLoading ? 'true' : undefined"
+                            >
+                                <div
+                                    v-if="listLoading"
+                                    class="properties-page__list-loading"
+                                    aria-live="polite"
                                 >
-                                    Load more
-                                </button>
+                                    <div class="properties-page__spinner" aria-hidden="true"></div>
+                                    <span class="visually-hidden">
+                                        {{ isLotsBrowsePage ? 'Loading lots...' : 'Loading properties...' }}
+                                    </span>
+                                </div>
+                                <template v-if="filteredPropertyCards.length">
+                                    <div class="property-grid">
+                                        <PropertyCard
+                                            v-for="(property, index) in paginatedPropertyCards"
+                                            :key="property.cardKey"
+                                            :property="property"
+                                            :image-loading="index < 3 ? 'eager' : 'lazy'"
+                                            :fetch-priority="index === 0 ? 'high' : 'auto'"
+                                            :show-interest-button="true"
+                                        />
+                                    </div>
+                                    <nav
+                                        v-if="totalPages > 1"
+                                        ref="listingPagination"
+                                        class="properties-page__pagination"
+                                        :class="{ 'properties-page__pagination--compact': paginationPageWindow < 7 }"
+                                        aria-label="Property listing pages"
+                                    >
+                                        <router-link
+                                            class="properties-page__pagination-link"
+                                            :class="{ 'properties-page__pagination-link--disabled': currentPage === 1 }"
+                                            :to="pageLocation(Math.max(1, currentPage - 1))"
+                                            :aria-disabled="currentPage === 1 ? 'true' : undefined"
+                                            @click.prevent="setPage(Math.max(1, currentPage - 1))"
+                                        >
+                                            <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                                            <span>Previous</span>
+                                        </router-link>
+                                        <div class="properties-page__pagination-pages">
+                                            <router-link
+                                                v-for="page in visiblePageNumbers"
+                                                :key="page"
+                                                class="properties-page__pagination-link properties-page__pagination-link--number"
+                                                :class="{ 'properties-page__pagination-link--active': page === currentPage }"
+                                                :to="pageLocation(page)"
+                                                :aria-current="page === currentPage ? 'page' : undefined"
+                                                @click.prevent="setPage(page)"
+                                            >
+                                                {{ page }}
+                                            </router-link>
+                                        </div>
+                                        <router-link
+                                            class="properties-page__pagination-link"
+                                            :class="{ 'properties-page__pagination-link--disabled': currentPage === totalPages }"
+                                            :to="pageLocation(Math.min(totalPages, currentPage + 1))"
+                                            :aria-disabled="currentPage === totalPages ? 'true' : undefined"
+                                            @click.prevent="setPage(Math.min(totalPages, currentPage + 1))"
+                                        >
+                                            <span>Next</span>
+                                            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                                        </router-link>
+                                        <span class="properties-page__pagination-status">
+                                            {{ paginationRangeTo }} of {{ filteredListingCount }}
+                                        </span>
+                                    </nav>
+                                </template>
+                                <p v-else-if="!listLoading" class="property-detail__filters-empty">
+                                    {{ isLotsBrowsePage ? 'No lots match your search or filters.' : 'No properties match your search or filters.' }}
+                                    <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
+                                        Show all
+                                    </button>
+                                </p>
                             </div>
-                            <p v-else class="property-detail__filters-empty">
-                                {{ isLotsBrowsePage ? 'No lots match your search or filters.' : 'No properties match your search or filters.' }}
-                                <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
-                                    Show all
-                                </button>
-                            </p>
                         </div>
                     </div>
                 </template>
@@ -302,7 +404,19 @@ export default {
             searchQuery: '',
             searchDraft: '',
             recordsPerPage: DEFAULT_PROPERTY_PAGE_SIZE,
-            visibleCount: DEFAULT_PROPERTY_PAGE_SIZE,
+            currentPage: 1,
+            paginationPageWindow: 7,
+            filtersExpanded: false,
+            filtersToggleStuck: false,
+            listingTotal: 0,
+            unfilteredTotal: 0,
+            listLoading: false,
+            facets: {
+                cities: [],
+                unit_types: [],
+                bedrooms: [],
+                bathrooms: [],
+            },
             syncingRouteFilters: false,
             _searchTimer: null,
             heroImageUrl,
@@ -345,7 +459,7 @@ export default {
         },
         heroTitle() {
             if (this.isLotsBrowsePage) {
-                return 'Lots for Sale & Lease';
+                return 'Land & Lots';
             }
             if (this.isCityBrowsePage && this.routeCityName) {
                 return `Properties in ${this.routeCityName}`;
@@ -408,12 +522,10 @@ export default {
             return this.units.filter((unit) => isLotListing(unit));
         },
         totalListingCount() {
-            const privateCount = this.scopedPrivateProperties.reduce(
-                (sum, property) => sum + this.countPropertyListings(property),
-                0,
-            );
-
-            return privateCount + this.scopedUnits.length;
+            return this.unfilteredTotal;
+        },
+        filteredListingCount() {
+            return this.listingTotal;
         },
         hasListingFilters() {
             return this.showCityFilter
@@ -425,139 +537,28 @@ export default {
             return this.availableCities.length && !this.isCityBrowsePage;
         },
         availableCities() {
-            const cities = new Set();
-
-            this.scopedPrivateProperties.forEach((property) => {
-                const city = getListingCity(property);
-                if (city) cities.add(city);
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                const city = getListingCity({ city: unit.project_city });
-                if (city) cities.add(city);
-            });
-
-            return [...cities].sort((a, b) => a.localeCompare(b));
+            return this.facets.cities.map((city) => city.name);
         },
         cityCounts() {
-            return buildCityListingCounts({
-                privateProperties: this.scopedPrivateProperties,
-                units: this.scopedUnits,
-            });
+            return Object.fromEntries(this.facets.cities.map((city) => [city.name, city.count]));
         },
         availableUnitTypes() {
-            const types = new Set();
-
-            this.scopedPrivateProperties.forEach((property) => {
-                (property.units || []).forEach((unit) => {
-                    if (unit.unit_type) types.add(unit.unit_type);
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.listing_kind === 'whole_building') return;
-                if (unit.unit_type) types.add(unit.unit_type);
-            });
-
-            return sortUnitTypes([...types]);
+            return this.facets.unit_types.map((type) => type.name);
         },
         unitTypeCounts() {
-            const counts = {};
-
-            this.scopedPrivateProperties.forEach((property) => {
-                (property.units || []).forEach((unit) => {
-                    if (!unit.unit_type) return;
-                    counts[unit.unit_type] = (counts[unit.unit_type] || 0) + 1;
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.listing_kind === 'whole_building') return;
-                if (!unit.unit_type) return;
-                counts[unit.unit_type] = (counts[unit.unit_type] || 0) + 1;
-            });
-
-            return counts;
+            return Object.fromEntries(this.facets.unit_types.map((type) => [type.name, type.count]));
         },
         availableBedrooms() {
-            const bedrooms = new Set();
-
-            this.scopedPrivateProperties.forEach((property) => {
-                getWholeBuildingListings(property).forEach((building) => {
-                    if (building.bedrooms != null) bedrooms.add(building.bedrooms);
-                });
-                (property.units || []).forEach((unit) => {
-                    if (unit.bedrooms != null) bedrooms.add(unit.bedrooms);
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.bedrooms != null) bedrooms.add(unit.bedrooms);
-            });
-
-            return [...bedrooms].sort((a, b) => a - b);
+            return this.facets.bedrooms.map((item) => item.value);
         },
         bedroomCounts() {
-            const counts = {};
-
-            this.scopedPrivateProperties.forEach((property) => {
-                getWholeBuildingListings(property).forEach((building) => {
-                    if (building.bedrooms == null) return;
-                    counts[building.bedrooms] = (counts[building.bedrooms] || 0) + 1;
-                });
-
-                (property.units || []).forEach((unit) => {
-                    if (unit.bedrooms == null) return;
-                    counts[unit.bedrooms] = (counts[unit.bedrooms] || 0) + 1;
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.bedrooms == null) return;
-                counts[unit.bedrooms] = (counts[unit.bedrooms] || 0) + 1;
-            });
-
-            return counts;
+            return Object.fromEntries(this.facets.bedrooms.map((item) => [item.value, item.count]));
         },
         availableBathrooms() {
-            const bathrooms = new Set();
-
-            this.scopedPrivateProperties.forEach((property) => {
-                getWholeBuildingListings(property).forEach((building) => {
-                    if (building.bathrooms != null) bathrooms.add(building.bathrooms);
-                });
-                (property.units || []).forEach((unit) => {
-                    if (unit.bathrooms != null) bathrooms.add(unit.bathrooms);
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.bathrooms != null) bathrooms.add(unit.bathrooms);
-            });
-
-            return [...bathrooms].sort((a, b) => a - b);
+            return this.facets.bathrooms.map((item) => item.value);
         },
         bathroomCounts() {
-            const counts = {};
-
-            this.scopedPrivateProperties.forEach((property) => {
-                getWholeBuildingListings(property).forEach((building) => {
-                    if (building.bathrooms == null) return;
-                    counts[building.bathrooms] = (counts[building.bathrooms] || 0) + 1;
-                });
-
-                (property.units || []).forEach((unit) => {
-                    if (unit.bathrooms == null) return;
-                    counts[unit.bathrooms] = (counts[unit.bathrooms] || 0) + 1;
-                });
-            });
-
-            this.scopedUnits.forEach((unit) => {
-                if (unit.bathrooms == null) return;
-                counts[unit.bathrooms] = (counts[unit.bathrooms] || 0) + 1;
-            });
-
-            return counts;
+            return Object.fromEntries(this.facets.bathrooms.map((item) => [item.value, item.count]));
         },
         filteredPrivateListingCards() {
             const query = this.searchQuery.trim();
@@ -609,18 +610,30 @@ export default {
             }));
         },
         filteredPropertyCards() {
-            return [...this.filteredPrivateListingCards, ...this.filteredUnitCards];
+            return this.scopedUnits.map((unit) => ({
+                ...this.mapListingUnit(unit),
+                cardKey: unit.listing_kind === 'whole_building'
+                    ? `building-${unit.id}`
+                    : `unit-${unit.id}`,
+            }));
         },
-        visibleCountClamped() {
-            const total = this.filteredPropertyCards.length;
-            if (!total) return 0;
-            return Math.min(this.visibleCount || this.recordsPerPage, total);
+        totalPages() {
+            return Math.max(1, Math.ceil(this.listingTotal / this.recordsPerPage));
         },
-        visiblePropertyCards() {
-            return this.filteredPropertyCards.slice(0, this.visibleCountClamped);
+        paginatedPropertyCards() {
+            return this.filteredPropertyCards;
         },
-        hasMoreListings() {
-            return this.visibleCountClamped < this.filteredPropertyCards.length;
+        paginationRangeTo() {
+            if (!this.listingTotal) return 0;
+            return Math.min(this.currentPage * this.recordsPerPage, this.listingTotal);
+        },
+        visiblePageNumbers() {
+            const maxVisible = this.paginationPageWindow;
+            const half = Math.floor(maxVisible / 2);
+            let start = Math.max(1, this.currentPage - half);
+            const end = Math.min(this.totalPages, start + maxVisible - 1);
+            start = Math.max(1, end - maxVisible + 1);
+            return Array.from({ length: end - start + 1 }, (_, index) => start + index);
         },
         filteredUnits() {
             const query = this.searchQuery.trim();
@@ -666,20 +679,50 @@ export default {
             return this.selectedBathrooms.length > 0
                 && this.selectedBathrooms.length < this.availableBathrooms.length;
         },
+        activeFilterCount() {
+            let count = 0;
+
+            if (this.showCityFilter && this.someCitiesSelected) {
+                count += this.selectedCities.length;
+            }
+            if (this.availableUnitTypes.length && this.someUnitTypesSelected) {
+                count += this.selectedUnitTypes.length;
+            }
+            if (this.availableBedrooms.length && this.someBedroomsSelected) {
+                count += this.selectedBedrooms.length;
+            }
+            if (this.availableBathrooms.length && this.someBathroomsSelected) {
+                count += this.selectedBathrooms.length;
+            }
+
+            return count;
+        },
     },
     watch: {
         '$route.fullPath'() {
-            if (!this.loading) {
-                this.applyRouteCityFilter();
-                this.resetVisibleListings();
-                this.clearLegacyPageQuery();
-                this.updateCityPageMeta();
+            if (this.loading) return;
+            const previousPage = this.currentPage;
+            const previousPath = this._listingPath;
+            const previousQuerySignature = this._listingQuerySignature;
+            const pathChanged = this.$route.path !== previousPath;
+            const queryChanged = this.listingQuerySignature(this.$route.query) !== previousQuerySignature;
+
+            if (pathChanged || queryChanged) {
+                this.syncFiltersFromRoute();
+            }
+            this.syncPageFromRoute();
+            this.updateCityPageMeta();
+            this._listingPath = this.$route.path;
+            this._listingQuerySignature = this.listingQuerySignature(this.$route.query);
+
+            if (pathChanged || queryChanged || this.currentPage !== previousPage || this._fetchOnPageReset) {
+                this._fetchOnPageReset = false;
+                this.fetchListing();
             }
         },
         isLotsBrowsePage() {
             if (this.loading) return;
             this.resetAllFilters();
-            this.resetVisibleListings();
             this.updateCityPageMeta();
         },
         selectedCities: 'onListingFiltersChanged',
@@ -690,11 +733,21 @@ export default {
         availableBedrooms: 'syncAllBedroomsIndeterminate',
         selectedBathrooms: 'onListingFiltersChanged',
         availableBathrooms: 'syncAllBathroomsIndeterminate',
-        recordsPerPage(size) {
-            this.visibleCount = size;
+        totalPages(total) {
+            if (this.currentPage > total) {
+                this.setPage(total, { replace: true, scroll: false });
+            }
         },
     },
+    created() {
+        this.paginationPageWindow = this.paginationWindowForWidth(
+            typeof window === 'undefined' ? 1200 : window.innerWidth,
+        );
+    },
     mounted() {
+        this.observePaginationLayout();
+        this.bindFiltersToggleScroll();
+        this.observeFiltersToggle();
         this.loadProperties();
     },
     beforeUnmount() {
@@ -702,44 +755,163 @@ export default {
             window.clearTimeout(this._searchTimer);
             this._searchTimer = null;
         }
+        this._paginationResizeObserver?.disconnect();
+        this._paginationResizeObserver = null;
+        this._paginationObservedEl = null;
+        this._filtersToggleObserver?.disconnect();
+        this._filtersToggleObserver = null;
+        this._filtersToggleObservedEl = null;
+        if (this._filtersToggleScrollBound) {
+            document.body.removeEventListener('scroll', this._filtersToggleScrollBound);
+            window.removeEventListener('scroll', this._filtersToggleScrollBound);
+            window.removeEventListener('resize', this._filtersToggleScrollBound);
+            this._filtersToggleScrollBound = null;
+        }
+        if (this._filtersToggleRaf) {
+            cancelAnimationFrame(this._filtersToggleRaf);
+            this._filtersToggleRaf = 0;
+        }
+        if (this._listingFetchTimer) {
+            window.clearTimeout(this._listingFetchTimer);
+            this._listingFetchTimer = null;
+        }
     },
     activated() {
         flushPendingScrollRestore();
     },
     updated() {
+        this.observePaginationLayout();
+        this.observeFiltersToggle();
         this.syncAllCitiesIndeterminate();
         this.syncAllUnitTypesIndeterminate();
         this.syncAllBedroomsIndeterminate();
         this.syncAllBathroomsIndeterminate();
     },
     methods: {
-        applyRouteCityFilter() {
+        parseQueryList(value) {
+            if (Array.isArray(value)) {
+                return value
+                    .flatMap((entry) => String(entry).split('|'))
+                    .map((entry) => entry.trim())
+                    .filter(Boolean);
+            }
+            if (value == null || value === '') return [];
+            return String(value)
+                .split('|')
+                .map((entry) => entry.trim())
+                .filter(Boolean);
+        },
+        parseQueryNumbers(value) {
+            return this.parseQueryList(value)
+                .map((entry) => Number(entry))
+                .filter((entry) => Number.isFinite(entry));
+        },
+        sameStringList(left, right) {
+            if (left.length !== right.length) return false;
+            return left.every((value, index) => value === right[index]);
+        },
+        sameNumberList(left, right) {
+            if (left.length !== right.length) return false;
+            return left.every((value, index) => Number(value) === Number(right[index]));
+        },
+        listingRouteQuery(page = this.currentPage) {
+            const query = {};
+            if (page > 1) {
+                query.page = String(page);
+            }
+
+            const search = this.searchQuery.trim();
+            if (search) {
+                query.q = search;
+            }
+
+            if (this.showCityFilter && this.selectedCities.length && !this.allCitiesSelected) {
+                query.cities = this.selectedCities.join('|');
+            }
+            if (this.selectedUnitTypes.length && !this.allUnitTypesSelected) {
+                query.unit_types = this.selectedUnitTypes.join('|');
+            }
+            if (this.selectedBedrooms.length && !this.allBedroomsSelected) {
+                query.bedrooms = this.selectedBedrooms.join('|');
+            }
+            if (this.selectedBathrooms.length && !this.allBathroomsSelected) {
+                query.bathrooms = this.selectedBathrooms.join('|');
+            }
+
+            return query;
+        },
+        listingQuerySignature(query = {}) {
+            const keys = ['page', 'q', 'cities', 'unit_types', 'bedrooms', 'bathrooms'];
+            return keys
+                .map((key) => {
+                    const raw = query[key];
+                    if (raw == null || raw === '') return `${key}=`;
+                    if (Array.isArray(raw)) {
+                        return `${key}=${raw.map((entry) => String(entry).trim()).filter(Boolean).join('|')}`;
+                    }
+                    return `${key}=${String(raw).trim()}`;
+                })
+                .join('&');
+        },
+        listingCanonicalUrl() {
+            const query = this.listingRouteQuery(this.currentPage);
+            const base = getSiteUrl(this.$route.path);
+            const params = new URLSearchParams();
+            Object.entries(query).forEach(([key, value]) => {
+                if (value != null && value !== '') {
+                    params.set(key, String(value));
+                }
+            });
+            const search = params.toString();
+            return search ? `${base}?${search}` : base;
+        },
+        syncFiltersFromRoute() {
+            const query = this.$route.query;
+            const nextSearch = String(query.q || '').trim();
+            const nextUnitTypes = this.parseQueryList(query.unit_types);
+            const nextBedrooms = this.parseQueryNumbers(query.bedrooms);
+            const nextBathrooms = this.parseQueryNumbers(query.bathrooms);
+            let nextCities = [];
+
             if (this.isCityBrowsePage) {
                 const city = resolveCityFromSlug(this.routeCitySlug, this.availableCities);
-                const nextCities = city ? [city] : [];
-                if (
-                    this.selectedCities.length !== nextCities.length
-                    || this.selectedCities[0] !== nextCities[0]
-                ) {
-                    this.syncingRouteFilters = true;
-                    this.selectedCities = nextCities;
-                    this.$nextTick(() => {
-                        this.syncingRouteFilters = false;
-                    });
-                }
+                nextCities = city ? [city] : [];
+            } else {
+                nextCities = this.parseQueryList(query.cities);
+            }
+
+            const citiesChanged = !this.sameStringList(this.selectedCities, nextCities);
+            const unitTypesChanged = !this.sameStringList(this.selectedUnitTypes, nextUnitTypes);
+            const bedroomsChanged = !this.sameNumberList(this.selectedBedrooms, nextBedrooms);
+            const bathroomsChanged = !this.sameNumberList(this.selectedBathrooms, nextBathrooms);
+            const searchChanged = this.searchQuery !== nextSearch || this.searchDraft !== nextSearch;
+
+            if (
+                !citiesChanged
+                && !unitTypesChanged
+                && !bedroomsChanged
+                && !bathroomsChanged
+                && !searchChanged
+            ) {
                 return;
             }
 
-            if (this.selectedCities.length) {
-                this.syncingRouteFilters = true;
-                this.selectedCities = [];
-                this.$nextTick(() => {
-                    this.syncingRouteFilters = false;
-                });
+            this.syncingRouteFilters = true;
+            if (citiesChanged) this.selectedCities = nextCities;
+            if (unitTypesChanged) this.selectedUnitTypes = nextUnitTypes;
+            if (bedroomsChanged) this.selectedBedrooms = nextBedrooms;
+            if (bathroomsChanged) this.selectedBathrooms = nextBathrooms;
+            if (searchChanged) {
+                this.searchQuery = nextSearch;
+                this.searchDraft = nextSearch;
             }
+            this.$nextTick(() => {
+                this.syncingRouteFilters = false;
+            });
         },
         updateCityPageMeta() {
-            const canonical = getSiteUrl(this.$route.path);
+            const pageSuffix = this.currentPage > 1 ? ` – Page ${this.currentPage}` : '';
+            const canonical = this.listingCanonicalUrl();
 
             if (this.isCityBrowsePage && !this.routeCityName) {
                 updatePageMeta({
@@ -753,9 +925,9 @@ export default {
 
             if (this.isLotsBrowsePage) {
                 updatePageMeta({
-                    title: 'Lots for Sale & Lease | Mr. Boss Realty',
+                    title: `Land & Lots${pageSuffix} | Mr. Boss Realty`,
                     description:
-                        'Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty.',
+                        `Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty${pageSuffix}.`,
                     canonical,
                 });
                 return;
@@ -763,8 +935,8 @@ export default {
 
             if (!this.isCityBrowsePage) {
                 updatePageMeta({
-                    title: 'Properties for Sale and Rent | Mr. Boss Realty',
-                    description: 'Explore condominiums and residential developments across the Philippines with Mr. Boss Realty.',
+                    title: `Properties for Sale and Rent${pageSuffix} | Mr. Boss Realty`,
+                    description: `Explore condominiums and residential developments across the Philippines with Mr. Boss Realty${pageSuffix}.`,
                     canonical,
                 });
                 return;
@@ -772,26 +944,127 @@ export default {
 
             const city = this.routeCityName;
             updatePageMeta({
-                title: `Properties in ${city} | Mr. Boss Realty`,
-                description: `Browse condominiums, houses, and rental properties in ${city} with Mr. Boss Realty.`,
+                title: `Properties in ${city}${pageSuffix} | Mr. Boss Realty`,
+                description: `Browse condominiums, houses, and rental properties in ${city} with Mr. Boss Realty${pageSuffix}.`,
                 canonical,
             });
         },
-        clearLegacyPageQuery() {
-            if (!this.$route.query.page) return;
-            const query = { ...this.$route.query };
-            delete query.page;
-            this.$router.replace({ path: this.$route.path, query }).catch(() => {});
+        syncPageFromRoute({ clamp = true } = {}) {
+            const requested = Number.parseInt(this.$route.query.page, 10);
+            const hasRequestedPage = Number.isInteger(requested) && requested > 0;
+            const nextPage = hasRequestedPage
+                ? (clamp ? Math.min(requested, this.totalPages) : requested)
+                : 1;
+            this.currentPage = nextPage;
+            if (clamp && hasRequestedPage && requested !== nextPage) {
+                this.setPage(nextPage, { replace: true, scroll: false });
+            }
         },
-        resetVisibleListings() {
-            this.visibleCount = this.recordsPerPage;
+        pageLocation(page) {
+            return {
+                path: this.$route.path,
+                query: this.listingRouteQuery(page),
+            };
         },
-        loadMoreListings() {
-            if (!this.hasMoreListings) return;
-            this.visibleCount = Math.min(
-                this.visibleCountClamped + this.recordsPerPage,
-                this.filteredPropertyCards.length,
-            );
+        setPage(page, { replace = false, scroll = true } = {}) {
+            const nextPage = Math.min(Math.max(1, page), this.totalPages);
+            const location = this.pageLocation(nextPage);
+            const navigation = replace ? this.$router.replace(location) : this.$router.push(location);
+            if (scroll) {
+                navigation.then(() => this.scrollToListings()).catch(() => {});
+            } else {
+                navigation.catch(() => {});
+            }
+        },
+        resetPage() {
+            if (this.currentPage !== 1 || this.$route.query.page) {
+                this.setPage(1, { replace: true, scroll: false });
+            }
+        },
+        paginationWindowForWidth(width) {
+            if (width < 420) return 3;
+            if (width < 680) return 5;
+            return 7;
+        },
+        applyPaginationWindow(width) {
+            if (!width) return;
+            const next = this.paginationWindowForWidth(width);
+            if (next !== this.paginationPageWindow) {
+                this.paginationPageWindow = next;
+            }
+        },
+        bindFiltersToggleScroll() {
+            if (this._filtersToggleScrollBound) return;
+
+            this._filtersToggleScrollBound = () => {
+                if (this._filtersToggleRaf) return;
+                this._filtersToggleRaf = window.requestAnimationFrame(() => {
+                    this._filtersToggleRaf = 0;
+                    this.syncFiltersToggleStuck();
+                });
+            };
+            document.body.addEventListener('scroll', this._filtersToggleScrollBound, { passive: true });
+            window.addEventListener('scroll', this._filtersToggleScrollBound, { passive: true });
+            window.addEventListener('resize', this._filtersToggleScrollBound, { passive: true });
+        },
+        syncFiltersToggleStuck() {
+            const sentinel = this.$refs.filtersToggleSentinel;
+            if (!sentinel || window.innerWidth > 767.98) {
+                if (this.filtersToggleStuck) this.filtersToggleStuck = false;
+                return;
+            }
+
+            const header = document.querySelector('.site-header');
+            const headerBottom = header ? header.getBoundingClientRect().bottom : 80;
+            const stuck = sentinel.getBoundingClientRect().top < headerBottom - 0.5;
+            if (stuck !== this.filtersToggleStuck) {
+                this.filtersToggleStuck = stuck;
+            }
+        },
+        observeFiltersToggle() {
+            const sentinel = this.$refs.filtersToggleSentinel;
+            if (!sentinel || typeof IntersectionObserver === 'undefined') {
+                this.syncFiltersToggleStuck();
+                return;
+            }
+            if (this._filtersToggleObservedEl === sentinel) {
+                this.syncFiltersToggleStuck();
+                return;
+            }
+
+            this._filtersToggleObserver?.disconnect();
+            const header = document.querySelector('.site-header');
+            const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 80;
+            this._filtersToggleObserver = new IntersectionObserver(() => {
+                this.syncFiltersToggleStuck();
+            }, {
+                root: null,
+                threshold: [0, 1],
+                rootMargin: `-${headerHeight}px 0px 0px 0px`,
+            });
+            this._filtersToggleObserver.observe(sentinel);
+            this._filtersToggleObservedEl = sentinel;
+            this.syncFiltersToggleStuck();
+        },
+        observePaginationLayout() {
+            const el = this.$refs.listingPagination;
+            if (!el || typeof ResizeObserver === 'undefined') return;
+
+            if (!this._paginationResizeObserver) {
+                this._paginationResizeObserver = new ResizeObserver((entries) => {
+                    this.applyPaginationWindow(entries[0]?.contentRect?.width || 0);
+                });
+            }
+
+            if (this._paginationObservedEl !== el) {
+                if (this._paginationObservedEl) {
+                    this._paginationResizeObserver.unobserve(this._paginationObservedEl);
+                }
+                this._paginationResizeObserver.observe(el);
+                this._paginationObservedEl = el;
+            }
+
+            this.applyPaginationWindow(el.clientWidth);
         },
         scrollToListings() {
             this.$nextTick(() => {
@@ -804,7 +1077,7 @@ export default {
             this.syncAllBedroomsIndeterminate();
             this.syncAllBathroomsIndeterminate();
             if (!this.syncingRouteFilters) {
-                this.resetVisibleListings();
+                this.scheduleListingFetch();
             }
         },
         countPropertyListings(property) {
@@ -891,7 +1164,7 @@ export default {
                 this._searchTimer = null;
             }
             this.searchQuery = this.searchDraft.trim();
-            this.resetVisibleListings();
+            this.scheduleListingFetch();
             this.$refs.searchInput?.focus();
         },
         onSearchInput() {
@@ -900,7 +1173,7 @@ export default {
             }
             this._searchTimer = window.setTimeout(() => {
                 this.searchQuery = this.searchDraft.trim();
-                this.resetVisibleListings();
+                this.scheduleListingFetch();
             }, 200);
         },
         clearSearch() {
@@ -910,7 +1183,7 @@ export default {
             }
             this.searchDraft = '';
             this.searchQuery = '';
-            this.resetVisibleListings();
+            this.scheduleListingFetch();
             this.$nextTick(() => {
                 this.$refs.searchInput?.focus();
             });
@@ -964,19 +1237,28 @@ export default {
             }
         },
         resetAllFilters() {
-            this.selectedCities = [];
             this.selectedUnitTypes = [];
             this.selectedBedrooms = [];
             this.selectedBathrooms = [];
             this.searchDraft = '';
             this.searchQuery = '';
-            this.resetVisibleListings();
+
+            if (this.isCityBrowsePage) {
+                const city = resolveCityFromSlug(this.routeCitySlug, this.availableCities);
+                this.selectedCities = city ? [city] : [];
+            } else {
+                this.selectedCities = [];
+            }
+
+            this.scheduleListingFetch();
         },
         async loadProperties() {
             this.loading = true;
             this.error = '';
             this.privateProperties = [];
             this.units = [];
+            this.listingTotal = 0;
+            this.unfilteredTotal = 0;
             this.selectedCities = [];
             this.selectedUnitTypes = [];
             this.selectedBedrooms = [];
@@ -985,42 +1267,114 @@ export default {
             this.searchQuery = '';
 
             try {
-                const [projectsRes, unitsRes, websiteSettings] = await Promise.all([
-                    this.$api.get('/projects/public/list'),
-                    this.$api.get('/units/public/list', { params: { limit: 'all' } }),
-                    loadWebsiteSettings(),
-                ]);
+                const websiteSettings = await loadWebsiteSettings();
                 this.recordsPerPage = websiteSettings.property_page_records_per_page;
-                this.visibleCount = this.recordsPerPage;
-
-                const privateProjects = (projectsRes.data || []).filter(
-                    (project) => project.is_private_on_website && project.city,
-                );
-
-                const detailResponses = await Promise.all(
-                    privateProjects.map((project) => {
-                        const apiPath = buildProjectPublicApiPath(project);
-                        return apiPath
-                            ? this.$api.get(apiPath)
-                            : Promise.resolve({ data: null });
-                    }),
-                );
-
-                this.privateProperties = detailResponses.map((response) => response.data).filter(Boolean);
-                this.units = (unitsRes.data || []).filter((item) => !item.is_private_on_website);
+                this._listingPath = this.$route.path;
+                this.syncFiltersFromRoute();
+                this.syncPageFromRoute({ clamp: false });
+                this._listingQuerySignature = this.listingQuerySignature(this.$route.query);
+                await this.fetchListing();
             } catch (err) {
                 console.error('Failed to load properties:', err);
                 this.error = 'Could not load properties right now. Please try again.';
                 this.privateProperties = [];
                 this.units = [];
+                this.listingTotal = 0;
+                this.unfilteredTotal = 0;
             } finally {
                 this.loading = false;
                 this.$nextTick(() => {
-                    this.applyRouteCityFilter();
-                    this.clearLegacyPageQuery();
+                    this.syncFiltersFromRoute();
                     this.updateCityPageMeta();
+                    this.observeFiltersToggle();
                     flushPendingScrollRestore();
                 });
+            }
+        },
+        listingQueryParams() {
+            const params = {
+                page: this.currentPage,
+                per_page: this.recordsPerPage,
+            };
+            const query = this.searchQuery.trim();
+            if (query) params.q = query;
+
+            if (this.isCityBrowsePage && this.routeCitySlug) {
+                params.city_slug = this.routeCitySlug;
+            } else if (this.selectedCities.length && !this.allCitiesSelected) {
+                params.cities = this.selectedCities.join('|');
+            }
+
+            if (this.selectedUnitTypes.length && !this.allUnitTypesSelected) {
+                params.unit_types = this.selectedUnitTypes.join('|');
+            }
+            if (this.selectedBedrooms.length && !this.allBedroomsSelected) {
+                params.bedrooms = this.selectedBedrooms.join('|');
+            }
+            if (this.selectedBathrooms.length && !this.allBathroomsSelected) {
+                params.bathrooms = this.selectedBathrooms.join('|');
+            }
+
+            return params;
+        },
+        scheduleListingFetch() {
+            if (this.loading) return;
+            if (this._listingFetchTimer) {
+                window.clearTimeout(this._listingFetchTimer);
+            }
+            this._listingFetchTimer = window.setTimeout(() => {
+                this._listingFetchTimer = null;
+                this.currentPage = 1;
+                const nextQuery = this.listingRouteQuery(1);
+                const queryChanged = this.listingQuerySignature(nextQuery)
+                    !== this.listingQuerySignature(this.$route.query);
+
+                if (queryChanged) {
+                    this._fetchOnPageReset = true;
+                    this.$router.replace({
+                        path: this.$route.path,
+                        query: nextQuery,
+                    }).catch(() => {});
+                    return;
+                }
+
+                this.fetchListing();
+            }, 0);
+        },
+        async fetchListing() {
+            const requestId = (this._listingRequestId || 0) + 1;
+            this._listingRequestId = requestId;
+            const initialLoad = this.loading;
+            if (!initialLoad) this.listLoading = true;
+
+            try {
+                const { data } = await this.$api.get('/units/public/list', {
+                    params: this.listingQueryParams(),
+                });
+                if (requestId !== this._listingRequestId) return;
+
+                const payload = data || {};
+                this.units = payload.data || [];
+                this.listingTotal = payload.meta?.total || 0;
+                this.unfilteredTotal = payload.meta?.unfiltered_total || 0;
+                if (payload.meta?.facets) {
+                    this.facets = payload.meta.facets;
+                }
+
+                const serverPage = payload.meta?.current_page || 1;
+                if (serverPage !== this.currentPage) {
+                    this.currentPage = serverPage;
+                    this.setPage(serverPage, { replace: true, scroll: false });
+                }
+            } catch (err) {
+                if (requestId !== this._listingRequestId) return;
+                console.error('Failed to load properties:', err);
+                if (initialLoad) throw err;
+                this.error = 'Could not load properties right now. Please try again.';
+            } finally {
+                if (requestId === this._listingRequestId) {
+                    this.listLoading = false;
+                }
             }
         },
     },

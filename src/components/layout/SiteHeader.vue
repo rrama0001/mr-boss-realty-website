@@ -60,11 +60,21 @@ export default {
             this.mobileNavOpen = false;
         },
         mobileNavOpen(open) {
+            if (open) {
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                document.documentElement.style.setProperty(
+                    '--site-scrollbar-width',
+                    `${Math.max(0, scrollbarWidth)}px`
+                );
+            } else {
+                document.documentElement.style.removeProperty('--site-scrollbar-width');
+            }
             document.body.classList.toggle('site-nav-open', open);
         },
     },
     beforeUnmount() {
         document.body.classList.remove('site-nav-open');
+        document.documentElement.style.removeProperty('--site-scrollbar-width');
     },
     methods: {
         goHome(event) {

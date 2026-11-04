@@ -109,7 +109,7 @@ const router = createRouter({
                     name: 'lots',
                     component: () => import('@/views/LotsView.vue'),
                     meta: {
-                        title: 'Lots for Sale & Lease | Mr. Boss Realty',
+                        title: 'Land & Lots | Mr. Boss Realty',
                         description:
                             'Browse residential, commercial, and agricultural lots for sale and lease across the Philippines with Mr. Boss Realty.',
                         path: '/lots',
