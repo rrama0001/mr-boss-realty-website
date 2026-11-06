@@ -29,7 +29,13 @@
                 >
                     {{ item.label }}
                 </router-link>
-                <a :href="adminLoginUrl" class="btn btn-primary site-header__cta">Login</a>
+                <router-link
+                    to="/login"
+                    class="btn btn-primary site-header__cta"
+                    @click="mobileNavOpen = false"
+                >
+                    Login
+                </router-link>
                 <router-link to="/properties" class="btn btn-primary btn-outline site-header__cta" @click="mobileNavOpen = false">
                     Register
                 </router-link>
@@ -52,7 +58,6 @@ export default {
             logoUrl,
             navItems: SITE_NAV_ITEMS,
             mobileNavOpen: false,
-            adminLoginUrl: import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173/login',
         };
     },
     watch: {

@@ -94,10 +94,12 @@
                             </div>
                         </div>
 
-                        <aside
-                            v-if="hasListingFilters"
-                            class="property-detail__filters"
-                            aria-label="Filter lots"
+                        <ListingFiltersShell
+                            :visible="hasListingFilters"
+                            :active-count="activeFilterCount"
+                            label="Filter lots"
+                            panel-id="lots-listing-filters"
+                            @clear="resetAllFilters"
                         >
                             <div v-if="availableCities.length" class="property-detail__filters-group">
                                 <label class="property-detail__filters-title property-detail__filters-title--toggle">
@@ -179,42 +181,42 @@
                                     </li>
                                 </ul>
                             </div>
-                        </aside>
 
-                        <div class="property-detail__units-main">
-                            <div v-if="filteredLotCards.length" class="property-grid">
-                                <PropertyCard
-                                    v-for="(property, index) in visibleLotCards"
-                                    :key="property.cardKey"
-                                    :property="property"
-                                    :image-loading="index < 3 ? 'eager' : 'lazy'"
-                                    :fetch-priority="index === 0 ? 'high' : 'auto'"
-                                    :show-interest-button="true"
-                                />
-                            </div>
-                            <div
-                                v-if="filteredLotCards.length"
-                                class="properties-page__load-more"
-                            >
-                                <p class="properties-page__load-more-status">
-                                    {{ visibleCountClamped }} of {{ filteredLotCards.length }}
-                                </p>
-                                <button
-                                    v-if="hasMoreListings"
-                                    type="button"
-                                    class="properties-page__load-more-btn"
-                                    @click="loadMoreListings"
+                            <template #main>
+                                <div v-if="filteredLotCards.length" class="property-grid">
+                                    <PropertyCard
+                                        v-for="(property, index) in visibleLotCards"
+                                        :key="property.cardKey"
+                                        :property="property"
+                                        :image-loading="index < 3 ? 'eager' : 'lazy'"
+                                        :fetch-priority="index === 0 ? 'high' : 'auto'"
+                                        :show-interest-button="true"
+                                    />
+                                </div>
+                                <div
+                                    v-if="filteredLotCards.length"
+                                    class="properties-page__load-more"
                                 >
-                                    Load more
-                                </button>
-                            </div>
-                            <p v-else class="property-detail__filters-empty">
-                                No lots match your search or filters.
-                                <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
-                                    Show all
-                                </button>
-                            </p>
-                        </div>
+                                    <p class="properties-page__load-more-status">
+                                        {{ visibleCountClamped }} of {{ filteredLotCards.length }}
+                                    </p>
+                                    <button
+                                        v-if="hasMoreListings"
+                                        type="button"
+                                        class="properties-page__load-more-btn"
+                                        @click="loadMoreListings"
+                                    >
+                                        Load more
+                                    </button>
+                                </div>
+                                <p v-else class="property-detail__filters-empty">
+                                    No lots match your search or filters.
+                                    <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
+                                        Show all
+                                    </button>
+                                </p>
+                            </template>
+                        </ListingFiltersShell>
                     </div>
                 </template>
             </div>
@@ -242,11 +244,12 @@ import {
 } from '@/utils/mapWholeBuildingToProperty';
 import { buildingMatchesSearch, unitMatchesSearch } from '@/utils/unitSearch';
 import { flushPendingScrollRestore } from '@/utils/scroll';
+import ListingFiltersShell from '@/components/property/ListingFiltersShell.vue';
 import heroImageUrl from '@/assets/images/hero-bg-lots.jpg';
 
 export default {
     name: 'LotsView',
-    components: { PropertyCard },
+    components: { PropertyCard, ListingFiltersShell },
     data() {
         return {
             loading: true,
@@ -396,6 +399,19 @@ export default {
         someListingTypesSelected() {
             return this.selectedListingTypes.length > 0
                 && this.selectedListingTypes.length < this.availableListingTypes.length;
+        },
+        activeFilterCount() {
+            let count = 0;
+            if (this.availableCities.length && this.someCitiesSelected) {
+                count += this.selectedCities.length;
+            }
+            if (this.availableLotTypes.length && this.someLotTypesSelected) {
+                count += this.selectedLotTypes.length;
+            }
+            if (this.availableListingTypes.length && this.someListingTypesSelected) {
+                count += this.selectedListingTypes.length;
+            }
+            return count;
         },
     },
     watch: {

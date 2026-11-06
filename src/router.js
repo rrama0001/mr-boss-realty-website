@@ -34,6 +34,42 @@ const router = createRouter({
     },
     routes: [
         {
+            path: '/login',
+            name: 'login',
+            component: () => import('@/views/LoginView.vue'),
+            meta: {
+                title: 'Login | Mr. Boss Realty',
+                description: 'Sign in to your Mr. Boss Realty account.',
+                path: '/login',
+                robots: 'noindex, nofollow',
+                hideAiChat: true,
+            },
+        },
+        {
+            path: '/forgot-password',
+            name: 'forgot-password',
+            component: () => import('@/views/ForgotPasswordView.vue'),
+            meta: {
+                title: 'Forgot Password | Mr. Boss Realty',
+                description: 'Reset your Mr. Boss Realty account password.',
+                path: '/forgot-password',
+                robots: 'noindex, nofollow',
+                hideAiChat: true,
+            },
+        },
+        {
+            path: '/reset-password',
+            name: 'reset-password',
+            component: () => import('@/views/ResetPasswordView.vue'),
+            meta: {
+                title: 'Reset Password | Mr. Boss Realty',
+                description: 'Choose a new password for your Mr. Boss Realty account.',
+                path: '/reset-password',
+                robots: 'noindex, nofollow',
+                hideAiChat: true,
+            },
+        },
+        {
             path: '/',
             component: SiteLayout,
             children: [

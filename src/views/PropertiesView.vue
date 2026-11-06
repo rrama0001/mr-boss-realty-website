@@ -114,66 +114,15 @@
                             </div>
                         </div>
 
-                        <div class="properties-page__listing-flow">
-                            <div
-                                v-if="hasListingFilters"
-                                ref="filtersToggleSentinel"
-                                class="properties-page__filters-sentinel"
-                                aria-hidden="true"
-                            ></div>
-                            <aside
-                                v-if="hasListingFilters"
-                                class="property-detail__filters"
-                                :class="{
-                                    'property-detail__filters--open': filtersExpanded,
-                                    'property-detail__filters--stuck': filtersToggleStuck,
-                                }"
-                                aria-label="Filter properties"
-                            >
-                                <div class="property-detail__filters-shell">
-                                    <div class="property-detail__filters-bar">
-                                        <button
-                                            type="button"
-                                            class="property-detail__filters-toggle"
-                                            :aria-expanded="filtersExpanded ? 'true' : 'false'"
-                                            aria-controls="property-listing-filters"
-                                            @click="filtersExpanded = !filtersExpanded"
-                                        >
-                                            <span class="property-detail__filters-toggle-label">
-                                                <i class="ti ti-filter" aria-hidden="true"></i>
-                                                <span>Filters</span>
-                                                <span
-                                                    v-if="activeFilterCount"
-                                                    class="property-detail__filters-toggle-count"
-                                                >{{ activeFilterCount }}</span>
-                                            </span>
-                                        </button>
-                                        <button
-                                            v-if="activeFilterCount"
-                                            type="button"
-                                            class="property-detail__filters-clear"
-                                            @click="resetAllFilters"
-                                        >
-                                            Clear
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="property-detail__filters-chevron"
-                                            :aria-expanded="filtersExpanded ? 'true' : 'false'"
-                                            aria-controls="property-listing-filters"
-                                            aria-label="Toggle filters"
-                                            @click="filtersExpanded = !filtersExpanded"
-                                        >
-                                            <i
-                                                class="ti"
-                                                :class="filtersExpanded ? 'ti-chevron-up' : 'ti-chevron-down'"
-                                                aria-hidden="true"
-                                            ></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="property-listing-filters" class="property-detail__filters-panel">
-                                    <div class="property-detail__filters-panel-inner">
+                        <ListingFiltersShell
+                            :visible="hasListingFilters"
+                            :active-count="activeFilterCount"
+                            label="Filter properties"
+                            panel-id="property-listing-filters"
+                            :main-class="{ 'property-detail__units-main--loading': listLoading }"
+                            :main-busy="listLoading"
+                            @clear="resetAllFilters"
+                        >
                                         <div v-if="showCityFilter" class="property-detail__filters-group">
                                             <label class="property-detail__filters-title property-detail__filters-title--toggle">
                                                 <input
@@ -281,15 +230,8 @@
                                                 </li>
                                             </ul>
                                         </div>
-                                    </div>
-                                </div>
-                            </aside>
 
-                            <div
-                                class="property-detail__units-main"
-                                :class="{ 'property-detail__units-main--loading': listLoading }"
-                                :aria-busy="listLoading ? 'true' : undefined"
-                            >
+                            <template #main>
                                 <div
                                     v-if="listLoading"
                                     class="properties-page__list-loading"
@@ -362,8 +304,8 @@
                                         Show all
                                     </button>
                                 </p>
-                            </div>
-                        </div>
+                            </template>
+                        </ListingFiltersShell>
                     </div>
                 </template>
             </div>
@@ -373,6 +315,7 @@
 
 <script>
 import PropertyCard from '@/components/home/PropertyCard.vue';
+import ListingFiltersShell from '@/components/property/ListingFiltersShell.vue';
 import { sortUnitTypes } from '@/constants/unitTypes';
 import { cityToSlug, resolveCityFromSlug, getListingCity, buildProjectPublicApiPath } from '@/utils/propertyCity';
 import { getSiteUrl, updatePageMeta } from '@/utils/seo';
@@ -390,7 +333,7 @@ import heroImageUrl from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 
 export default {
     name: 'PropertiesView',
-    components: { PropertyCard },
+    components: { PropertyCard, ListingFiltersShell },
     data() {
         return {
             loading: true,
@@ -406,8 +349,6 @@ export default {
             recordsPerPage: DEFAULT_PROPERTY_PAGE_SIZE,
             currentPage: 1,
             paginationPageWindow: 7,
-            filtersExpanded: false,
-            filtersToggleStuck: false,
             listingTotal: 0,
             unfilteredTotal: 0,
             listLoading: false,
@@ -746,8 +687,6 @@ export default {
     },
     mounted() {
         this.observePaginationLayout();
-        this.bindFiltersToggleScroll();
-        this.observeFiltersToggle();
         this.loadProperties();
     },
     beforeUnmount() {
@@ -758,19 +697,6 @@ export default {
         this._paginationResizeObserver?.disconnect();
         this._paginationResizeObserver = null;
         this._paginationObservedEl = null;
-        this._filtersToggleObserver?.disconnect();
-        this._filtersToggleObserver = null;
-        this._filtersToggleObservedEl = null;
-        if (this._filtersToggleScrollBound) {
-            document.body.removeEventListener('scroll', this._filtersToggleScrollBound);
-            window.removeEventListener('scroll', this._filtersToggleScrollBound);
-            window.removeEventListener('resize', this._filtersToggleScrollBound);
-            this._filtersToggleScrollBound = null;
-        }
-        if (this._filtersToggleRaf) {
-            cancelAnimationFrame(this._filtersToggleRaf);
-            this._filtersToggleRaf = 0;
-        }
         if (this._listingFetchTimer) {
             window.clearTimeout(this._listingFetchTimer);
             this._listingFetchTimer = null;
@@ -781,7 +707,6 @@ export default {
     },
     updated() {
         this.observePaginationLayout();
-        this.observeFiltersToggle();
         this.syncAllCitiesIndeterminate();
         this.syncAllUnitTypesIndeterminate();
         this.syncAllBedroomsIndeterminate();
@@ -992,59 +917,6 @@ export default {
             if (next !== this.paginationPageWindow) {
                 this.paginationPageWindow = next;
             }
-        },
-        bindFiltersToggleScroll() {
-            if (this._filtersToggleScrollBound) return;
-
-            this._filtersToggleScrollBound = () => {
-                if (this._filtersToggleRaf) return;
-                this._filtersToggleRaf = window.requestAnimationFrame(() => {
-                    this._filtersToggleRaf = 0;
-                    this.syncFiltersToggleStuck();
-                });
-            };
-            document.body.addEventListener('scroll', this._filtersToggleScrollBound, { passive: true });
-            window.addEventListener('scroll', this._filtersToggleScrollBound, { passive: true });
-            window.addEventListener('resize', this._filtersToggleScrollBound, { passive: true });
-        },
-        syncFiltersToggleStuck() {
-            const sentinel = this.$refs.filtersToggleSentinel;
-            if (!sentinel || window.innerWidth > 767.98) {
-                if (this.filtersToggleStuck) this.filtersToggleStuck = false;
-                return;
-            }
-
-            const header = document.querySelector('.site-header');
-            const headerBottom = header ? header.getBoundingClientRect().bottom : 80;
-            const stuck = sentinel.getBoundingClientRect().top < headerBottom - 0.5;
-            if (stuck !== this.filtersToggleStuck) {
-                this.filtersToggleStuck = stuck;
-            }
-        },
-        observeFiltersToggle() {
-            const sentinel = this.$refs.filtersToggleSentinel;
-            if (!sentinel || typeof IntersectionObserver === 'undefined') {
-                this.syncFiltersToggleStuck();
-                return;
-            }
-            if (this._filtersToggleObservedEl === sentinel) {
-                this.syncFiltersToggleStuck();
-                return;
-            }
-
-            this._filtersToggleObserver?.disconnect();
-            const header = document.querySelector('.site-header');
-            const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 80;
-            this._filtersToggleObserver = new IntersectionObserver(() => {
-                this.syncFiltersToggleStuck();
-            }, {
-                root: null,
-                threshold: [0, 1],
-                rootMargin: `-${headerHeight}px 0px 0px 0px`,
-            });
-            this._filtersToggleObserver.observe(sentinel);
-            this._filtersToggleObservedEl = sentinel;
-            this.syncFiltersToggleStuck();
         },
         observePaginationLayout() {
             const el = this.$refs.listingPagination;

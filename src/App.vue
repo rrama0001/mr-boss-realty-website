@@ -5,7 +5,7 @@
         <ConfirmDialog />
         <PropertyCompareModal />
         <!-- Chat last so it stacks above every modal/dialog in #app. -->
-        <MrBossAiChatWidget />
+        <MrBossAiChatWidget v-if="showAiChat" />
     </div>
 </template>
 
@@ -24,16 +24,26 @@ export default {
         PropertyCompareModal,
         MrBossAiChatWidget,
     },
+    computed: {
+        showAiChat() {
+            return !this.$route.meta?.hideAiChat;
+        },
+    },
     methods: {
         onMediaClick(event) {
             if (event.defaultPrevented) return;
-            if (event.target.closest('.media-previews__item')) return;
-            if (event.target.closest('.unit-detail__gallery-thumb')) return;
-            if (event.target.closest('.property-hero__bg')) return;
             if (event.target.closest('.media-viewer')) return;
-            if (event.target.closest('.site-header__brand, .site-footer__brand-block, .property-detail__logo-wrap')) {
+
+            // Unit/building galleries and chat previews open the viewer themselves.
+            if (event.target.closest('.unit-detail__gallery-thumb, .media-previews__item')) {
                 return;
             }
+
+            // Only listing card media should use this global click handler.
+            const listingMedia = event.target.closest(
+                '.property-card__media, .featured-property-card__media',
+            );
+            if (!listingMedia) return;
 
             const link = event.target.closest('a[href]');
             if (link && event.target.tagName !== 'IMG') {
@@ -47,11 +57,6 @@ export default {
             }
 
             if (event.target.tagName === 'IMG') {
-                const parentLink = event.target.closest('a[href]');
-                if (parentLink && !createMediaItem(parentLink.getAttribute('href'), '')) {
-                    return;
-                }
-
                 const src = event.target.currentSrc || event.target.src;
                 const item = createMediaItem(src, event.target.alt || 'Image');
                 if (item?.type === 'image') {

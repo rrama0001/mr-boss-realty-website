@@ -128,10 +128,12 @@
                             </div>
                         </div>
 
-                        <aside
-                            v-if="hasListingFilters"
-                            class="property-detail__filters"
-                            aria-label="Filter listings"
+                        <ListingFiltersShell
+                            :visible="hasListingFilters"
+                            :active-count="activeFilterCount"
+                            label="Filter listings"
+                            panel-id="property-detail-listing-filters"
+                            @clear="resetAllFilters"
                         >
                             <div v-if="availableListingTypes.length" class="property-detail__filters-group">
                                 <label class="property-detail__filters-title property-detail__filters-title--toggle">
@@ -267,25 +269,25 @@
                                     </li>
                                 </ul>
                             </div>
-                        </aside>
 
-                        <div class="property-detail__units-main">
-                            <div v-if="filteredListingCards.length" class="property-grid">
-                                <PropertyCard
-                                    v-for="(listing, index) in filteredListingCards"
-                                    :key="listing.id"
-                                    :property="listing"
-                                    :image-loading="index < 3 ? 'eager' : 'lazy'"
-                                    :show-interest-button="true"
-                                />
-                            </div>
-                            <p v-else class="property-detail__filters-empty">
-                                No listings match your search or filters.
-                                <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
-                                    Show all
-                                </button>
-                            </p>
-                        </div>
+                            <template #main>
+                                <div v-if="filteredListingCards.length" class="property-grid">
+                                    <PropertyCard
+                                        v-for="(listing, index) in filteredListingCards"
+                                        :key="listing.id"
+                                        :property="listing"
+                                        :image-loading="index < 3 ? 'eager' : 'lazy'"
+                                        :show-interest-button="true"
+                                    />
+                                </div>
+                                <p v-else class="property-detail__filters-empty">
+                                    No listings match your search or filters.
+                                    <button type="button" class="property-detail__filters-reset" @click="resetAllFilters">
+                                        Show all
+                                    </button>
+                                </p>
+                            </template>
+                        </ListingFiltersShell>
                     </div>
 
                     <p v-else class="property-detail__units-empty">
@@ -312,13 +314,14 @@ import { scrollToPageTopAfterRender } from '@/utils/scroll';
 import defaultPropertyLogo from '@/assets/images/property-default-logo.svg';
 import fallbackCoverImage from '@/assets/images/hero-bg-03-apartment-towers.jpg';
 import { resolveMediaUrl } from '@/utils/mediaUrls';
+import ListingFiltersShell from '@/components/property/ListingFiltersShell.vue';
 
 const DEFAULT_COVER =
     'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80';
 
 export default {
     name: 'PropertyDetailView',
-    components: { PropertyCard },
+    components: { PropertyCard, ListingFiltersShell },
     data() {
         return {
             loading: true,
@@ -586,6 +589,25 @@ export default {
         someListingTypesSelected() {
             return this.selectedListingTypes.length > 0
                 && this.selectedListingTypes.length < this.availableListingTypes.length;
+        },
+        activeFilterCount() {
+            let count = 0;
+            if (this.availableListingTypes.length && this.someListingTypesSelected) {
+                count += this.selectedListingTypes.length;
+            }
+            if (this.availableBuildingTypes.length && this.someBuildingTypesSelected) {
+                count += this.selectedBuildingTypes.length;
+            }
+            if (this.availableUnitTypes.length && this.someUnitTypesSelected) {
+                count += this.selectedUnitTypes.length;
+            }
+            if (this.availableBedrooms.length && this.someBedroomsSelected) {
+                count += this.selectedBedrooms.length;
+            }
+            if (this.availableBathrooms.length && this.someBathroomsSelected) {
+                count += this.selectedBathrooms.length;
+            }
+            return count;
         },
     },
     watch: {
