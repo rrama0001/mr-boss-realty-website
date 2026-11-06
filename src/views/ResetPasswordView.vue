@@ -28,7 +28,7 @@
                     {{ successMessage }}
                 </p>
 
-                <form class="login-form" @submit.prevent="onSubmit">
+                <form v-if="!successMessage" class="login-form" @submit.prevent="onSubmit">
                     <div class="login-form__field">
                         <label class="login-form__label" for="reset-password">New password</label>
                         <input
@@ -41,6 +41,7 @@
                             placeholder="Enter a new password"
                             required
                             minlength="8"
+                            :disabled="!resetToken"
                         />
                     </div>
 
@@ -56,13 +57,14 @@
                             placeholder="Re-enter your new password"
                             required
                             minlength="8"
+                            :disabled="!resetToken"
                         />
                     </div>
 
                     <button
                         type="submit"
                         class="btn btn-primary login-form__submit"
-                        :disabled="isSubmitting"
+                        :disabled="isSubmitting || !resetToken"
                     >
                         <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         <span>{{ isSubmitting ? 'Updating...' : 'Update password' }}</span>
@@ -109,7 +111,7 @@ export default {
         }
     },
     methods: {
-        onSubmit() {
+        async onSubmit() {
             this.errorMessage = '';
             this.successMessage = '';
 
@@ -130,11 +132,22 @@ export default {
 
             this.isSubmitting = true;
 
-            // Password reset confirmation will be wired to the API next.
-            window.setTimeout(() => {
+            try {
+                const res = await this.$api.post('/auth/reset-password', {
+                    token: this.resetToken,
+                    password: this.form.password,
+                    passwordConfirm: this.form.passwordConfirm,
+                });
+                this.successMessage = res.data?.message
+                    || 'Your password has been updated. You can now log in with your email and password.';
+                this.form.password = '';
+                this.form.passwordConfirm = '';
+            } catch (err) {
+                this.errorMessage = err.response?.data?.error
+                    || 'Unable to update your password. Please request a new reset link.';
+            } finally {
                 this.isSubmitting = false;
-                this.successMessage = 'Password reset will be available soon. You can return to login when ready.';
-            }, 400);
+            }
         },
     },
 };

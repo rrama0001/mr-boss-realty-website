@@ -27,15 +27,15 @@
 
                 <form class="login-form" @submit.prevent="onSubmit">
                     <div class="login-form__field">
-                        <label class="login-form__label" for="login-username">Username</label>
+                        <label class="login-form__label" for="login-email">Email</label>
                         <input
-                            id="login-username"
-                            v-model.trim="form.username"
-                            type="text"
+                            id="login-email"
+                            v-model.trim="form.email"
+                            type="email"
                             class="form-control"
-                            name="username"
-                            autocomplete="username"
-                            placeholder="Enter your username"
+                            name="email"
+                            autocomplete="email"
+                            placeholder="Enter your email"
                             required
                         />
                     </div>
@@ -115,7 +115,7 @@ export default {
             logoUrl,
             bgImageUrl,
             form: {
-                username: '',
+                email: '',
                 password: '',
             },
             isSubmitting: false,
@@ -124,21 +124,41 @@ export default {
         };
     },
     methods: {
-        onSubmit() {
+        async onSubmit() {
             this.errorMessage = '';
 
-            if (!this.form.username || !this.form.password) {
-                this.errorMessage = 'Please enter your username and password.';
+            if (!this.form.email || !this.form.password) {
+                this.errorMessage = 'Please enter your email and password.';
                 return;
             }
 
             this.isSubmitting = true;
 
-            // Password login for website accounts will be wired to the API next.
-            window.setTimeout(() => {
+            try {
+                const res = await this.$api.post('/auth/login', {
+                    email: this.form.email,
+                    password: this.form.password,
+                }, {
+                    withCredentials: true,
+                });
+
+                const role = String(res.data?.user?.role || '').toLowerCase();
+                const adminBase = String(import.meta.env.VITE_ADMIN_URL || 'http://localhost:5173')
+                    .replace(/\/login\/?$/i, '')
+                    .replace(/\/$/, '');
+
+                if (role === 'admin' || role === 'agent') {
+                    window.location.href = `${adminBase}/dashboard`;
+                    return;
+                }
+
+                this.$router.push('/');
+            } catch (err) {
+                this.errorMessage = err.response?.data?.error
+                    || 'Unable to sign in. Please check your email and password.';
+            } finally {
                 this.isSubmitting = false;
-                this.errorMessage = 'Username and password login will be available soon.';
-            }, 400);
+            }
         },
         loginWithGoogle() {
             this.errorMessage = '';

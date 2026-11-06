@@ -17,7 +17,7 @@
                     <img :src="logoUrl" :alt="appName" class="login-panel__logo" />
                     <h1 id="forgot-title" class="login-panel__title">Forgot password</h1>
                     <p class="login-panel__lead">
-                        Enter your username or email and we&rsquo;ll send reset instructions.
+                        Enter your account email and we&rsquo;ll send a link to set or reset your password.
                     </p>
                 </div>
 
@@ -27,18 +27,22 @@
                 <p v-if="successMessage" class="alert alert-success login-panel__alert" role="status">
                     {{ successMessage }}
                 </p>
+                <p v-if="previewResetUrl" class="alert alert-info login-panel__alert" role="status">
+                    Dev preview:
+                    <a :href="previewResetUrl">Open reset link</a>
+                </p>
 
                 <form class="login-form" @submit.prevent="onSubmit">
                     <div class="login-form__field">
-                        <label class="login-form__label" for="forgot-account">Username or email</label>
+                        <label class="login-form__label" for="forgot-email">Email</label>
                         <input
-                            id="forgot-account"
-                            v-model.trim="form.account"
-                            type="text"
+                            id="forgot-email"
+                            v-model.trim="form.email"
+                            type="email"
                             class="form-control"
-                            name="account"
-                            autocomplete="username"
-                            placeholder="Enter your username or email"
+                            name="email"
+                            autocomplete="email"
+                            placeholder="Enter your email"
                             required
                         />
                     </div>
@@ -74,30 +78,40 @@ export default {
             logoUrl,
             bgImageUrl,
             form: {
-                account: '',
+                email: '',
             },
             isSubmitting: false,
             errorMessage: '',
             successMessage: '',
+            previewResetUrl: '',
         };
     },
     methods: {
-        onSubmit() {
+        async onSubmit() {
             this.errorMessage = '';
             this.successMessage = '';
+            this.previewResetUrl = '';
 
-            if (!this.form.account) {
-                this.errorMessage = 'Please enter your username or email.';
+            if (!this.form.email) {
+                this.errorMessage = 'Please enter your email.';
                 return;
             }
 
             this.isSubmitting = true;
 
-            // Password reset email flow will be wired to the API next.
-            window.setTimeout(() => {
+            try {
+                const res = await this.$api.post('/auth/forgot-password', {
+                    email: this.form.email,
+                });
+                this.successMessage = res.data?.message
+                    || 'If an account matches that email, password reset instructions have been sent.';
+                this.previewResetUrl = res.data?.preview?.resetUrl || '';
+            } catch (err) {
+                this.errorMessage = err.response?.data?.error
+                    || 'Unable to send a reset link right now. Please try again.';
+            } finally {
                 this.isSubmitting = false;
-                this.successMessage = 'If an account matches, reset instructions will be sent shortly. This will be available soon.';
-            }, 400);
+            }
         },
     },
 };
