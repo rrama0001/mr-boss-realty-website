@@ -1,103 +1,118 @@
 <template>
-    <div class="login-page">
-        <div class="login-page__backdrop" aria-hidden="true">
-            <img
-                class="login-page__bg"
-                :src="bgImageUrl"
-                alt=""
-                width="1920"
-                height="1080"
-                decoding="async"
-            />
-            <div class="login-page__overlay"></div>
-        </div>
-        <div class="container-xl login-page__container">
-            <section class="login-panel" aria-labelledby="login-title">
-                <div class="login-panel__brand">
-                    <img :src="logoUrl" :alt="appName" class="login-panel__logo" />
-                    <h1 id="login-title" class="login-panel__title">Login</h1>
-                    <p class="login-panel__lead">
-                        Sign in to continue with your Mr. Boss Realty account.
+    <div class="auth-page">
+        <div class="auth-page__glow" aria-hidden="true"></div>
+
+        <div class="auth-page__shell">
+            <header class="auth-brand">
+                <router-link to="/" class="auth-brand__logo-link" aria-label="Go to homepage">
+                    <img :src="logoUrl" :alt="appName" class="auth-brand__logo" />
+                </router-link>
+                <h1 id="login-title" class="auth-brand__title">Sign in to your account</h1>
+            </header>
+
+            <div class="auth-stage">
+                <aside class="auth-visual" aria-hidden="true">
+                    <img
+                        class="auth-visual__image"
+                        :src="visualUrl"
+                        alt=""
+                        width="640"
+                        height="800"
+                        decoding="async"
+                    />
+                </aside>
+
+                <section class="auth-panel" aria-labelledby="login-title">
+                    <p class="auth-panel__lead">
+                        Welcome back. Sign in to continue with Mr. Boss Realty.
                     </p>
-                </div>
 
-                <p v-if="errorMessage" class="alert alert-warning login-panel__alert" role="alert">
-                    {{ errorMessage }}
-                </p>
+                    <p v-if="errorMessage" class="alert alert-warning auth-panel__alert" role="alert">
+                        {{ errorMessage }}
+                    </p>
 
-                <form class="login-form" @submit.prevent="onSubmit">
-                    <div class="login-form__field">
-                        <label class="login-form__label" for="login-email">Email</label>
-                        <input
-                            id="login-email"
-                            v-model.trim="form.email"
-                            type="email"
-                            class="form-control"
-                            name="email"
-                            autocomplete="email"
-                            placeholder="Enter your email"
-                            required
-                        />
-                    </div>
-
-                    <div class="login-form__field">
-                        <div class="login-form__label-row">
-                            <label class="login-form__label" for="login-password">Password</label>
-                            <router-link to="/forgot-password" class="login-form__forgot">
-                                Forgot password?
-                            </router-link>
+                    <form class="auth-form" @submit.prevent="onSubmit">
+                        <div class="auth-form__field">
+                            <label class="auth-form__label" for="login-email">Email</label>
+                            <input
+                                id="login-email"
+                                v-model.trim="form.email"
+                                type="email"
+                                class="form-control auth-form__input"
+                                name="email"
+                                autocomplete="email"
+                                placeholder="Enter your email"
+                                required
+                            />
                         </div>
-                        <input
-                            id="login-password"
-                            v-model="form.password"
-                            type="password"
-                            class="form-control"
-                            name="password"
-                            autocomplete="current-password"
-                            placeholder="Enter your password"
-                            required
-                        />
+
+                        <div class="auth-form__field">
+                            <div class="auth-form__label">
+                                <label for="login-password">Password</label>
+                                <router-link to="/forgot-password" class="auth-form__forgot">
+                                    Forgot password?
+                                </router-link>
+                            </div>
+                            <input
+                                id="login-password"
+                                v-model="form.password"
+                                type="password"
+                                class="form-control auth-form__input"
+                                name="password"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary auth-form__submit"
+                            :disabled="isSubmitting"
+                        >
+                            <span
+                                v-if="isSubmitting"
+                                class="spinner-border spinner-border-sm"
+                                role="status"
+                                aria-hidden="true"
+                            ></span>
+                            <span>{{ isSubmitting ? 'Signing in...' : 'Login' }}</span>
+                        </button>
+                    </form>
+
+                    <div class="auth-panel__divider" role="separator" aria-label="Or">
+                        <span>or</span>
                     </div>
 
                     <button
-                        type="submit"
-                        class="btn btn-primary login-form__submit"
-                        :disabled="isSubmitting"
+                        type="button"
+                        class="btn auth-google-btn"
+                        :disabled="isGoogleLoading"
+                        @click="loginWithGoogle"
                     >
-                        <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>{{ isSubmitting ? 'Signing in...' : 'Login' }}</span>
+                        <template v-if="!isGoogleLoading">
+                            <img
+                                src="https://developers.google.com/identity/images/g-logo.png"
+                                alt=""
+                                width="20"
+                                height="20"
+                            />
+                            <span>Login using Google</span>
+                        </template>
+                        <template v-else>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>Connecting...</span>
+                        </template>
                     </button>
-                </form>
 
-                <div class="login-panel__divider" role="separator" aria-label="Or">
-                    <span>or</span>
-                </div>
-
-                <button
-                    type="button"
-                    class="btn login-google-btn"
-                    :disabled="isGoogleLoading"
-                    @click="loginWithGoogle"
-                >
-                    <template v-if="!isGoogleLoading">
-                        <img
-                            src="https://developers.google.com/identity/images/g-logo.png"
-                            alt=""
-                            width="20"
-                            height="20"
-                        />
-                        <span>Login using Google</span>
-                    </template>
-                    <template v-else>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span>Connecting...</span>
-                    </template>
-                </button>
-
-                <p class="login-panel__footer">
-                    <router-link to="/">Back to home</router-link>
-                </p>
-            </section>
+                    <p class="auth-panel__footer">
+                        Don&rsquo;t have an account?
+                        <router-link to="/register">Create one</router-link>
+                        <span class="auth-panel__footer-sep" aria-hidden="true"> · </span>
+                        <router-link to="/">Back to home</router-link>
+                    </p>
+                </section>
+            </div>
         </div>
     </div>
 </template>
@@ -105,7 +120,7 @@
 <script>
 import { appName } from '@/config/app';
 import logoUrl from '@/assets/images/mr-boss-realty-logo.png';
-import bgImageUrl from '@/assets/images/mr-boss-login-background.jpg';
+import visualUrl from '@/assets/images/auth-login-visual.jpg';
 
 export default {
     name: 'LoginView',
@@ -113,7 +128,7 @@ export default {
         return {
             appName,
             logoUrl,
-            bgImageUrl,
+            visualUrl,
             form: {
                 email: '',
                 password: '',

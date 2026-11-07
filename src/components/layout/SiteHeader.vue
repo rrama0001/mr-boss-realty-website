@@ -36,7 +36,7 @@
                 >
                     Login
                 </router-link>
-                <router-link to="/properties" class="btn btn-primary btn-outline site-header__cta" @click="mobileNavOpen = false">
+                <router-link to="/register" class="btn btn-primary btn-outline site-header__cta" @click="mobileNavOpen = false">
                     Register
                 </router-link>
             </nav>

@@ -141,6 +141,18 @@ body {
 	border-radius: 0.375rem;
 	font-weight: 600;
 	white-space: nowrap;
+
+	&.btn-outline,
+	&.btn-outline-primary {
+		&:hover,
+		&:focus,
+		&:active {
+			color: var(--app-primary);
+			background: rgba(6, 111, 209, 0.08);
+			border-color: rgba(6, 111, 209, 0.35);
+			box-shadow: none;
+		}
+	}
 }
 
 .site-header__toggle {

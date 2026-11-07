@@ -46,6 +46,18 @@ const router = createRouter({
             },
         },
         {
+            path: '/register',
+            name: 'register',
+            component: () => import('@/views/RegisterView.vue'),
+            meta: {
+                title: 'Create Account | Mr. Boss Realty',
+                description: 'Create a Mr. Boss Realty account to save preferences and get listing updates.',
+                path: '/register',
+                robots: 'noindex, nofollow',
+                hideAiChat: true,
+            },
+        },
+        {
             path: '/forgot-password',
             name: 'forgot-password',
             component: () => import('@/views/ForgotPasswordView.vue'),
